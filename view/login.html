@@ -1,0 +1,22 @@
+{{ block "login" . }}
+<!DOCTYPE html>
+<html>
+    {{ template "head" . }}
+    <title>Login</title>
+    <body class="flex h-[50vh] items-center justify-center">
+        <div class="flex flex-col items-center gap-[1rem]">
+            <h1 class="text-[1.5rem] uppercase font-bold">seblak99</h1>
+            <form method="POST" action="/auth/login">
+                <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
+                <button
+                    type="submit"
+                    class="flex items-center gap-[.5rem] cursor-pointer py-[.5rem] px-[1rem]
+                    bg-blue-600 text-white rounded hover:bg-blue-800 transition">
+                    <i class="fa-brands fa-google"></i>
+                    <span class="font-semibold">Login With Google</span>
+                </button>
+            </form>
+        </div>
+    </body>
+</html>
+{{ end }}

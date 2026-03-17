@@ -1,0 +1,17 @@
+{{  block "home" . }}
+<!DOCTYPE html>
+<html>
+    {{  template "head" . }}
+    <title>Homepage</title>
+    <body class="flex h-[50vh] items-center justify-center">
+        <div class="flex flex-col items-center gap-[1rem]">
+            <h1 class="text-[1.5rem] uppercase font-bold">seblak99</h1>
+            <div>
+                {{ range .menu }}
+                <p>{{ .Name }}</p>
+                {{ end }}
+            </div>
+        </div>
+    </body>
+</html>
+{{ end }}
