@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
@@ -18,9 +19,12 @@ var PublicURL = []string{
 	"/auth/login",
 	"/auth/oauth/callback",
 	"/favicon.ico",
+	"/cart/add",
+	"/cart/delete",
 }
 
 var ProtectedURL = []string{
+	"/auth/logout",
 	"/profile",
 	"/checkout",
 }
@@ -48,7 +52,7 @@ func NewServer() (*Server, error) {
 	store.Options.HttpOnly = true
 	store.Options.Secure = false
 	store.Options.SameSite = http.SameSiteStrictMode
-	store.Options.MaxAge = 86400
+	store.Options.MaxAge = int(12 * time.Hour)
 
 	return &Server{
 		DB:           db,

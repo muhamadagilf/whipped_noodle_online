@@ -3,15 +3,76 @@
 <html>
     {{  template "head" . }}
     <title>Homepage</title>
-    <body class="flex h-[50vh] items-center justify-center">
-        <div class="flex flex-col items-center gap-[1rem]">
-            <h1 class="text-[1.5rem] uppercase font-bold">seblak99</h1>
-            <div>
-                {{ range .menu }}
-                <p>{{ .Name }}</p>
+    <body hx-ext="response-targets" class="flex flex-col items-center gap-[1.5rem]">
+        {{  template "loader" . }}
+        <div class="flex flex-col gap-[2rem] w-[70%] mt-[4rem]">
+            <div id="header" class="flex justify-between items-center">
+                <h1 class="font-bold text-[1.2rem]">SEBLAK99</h1>
+                {{ if .cred.UserID.Valid }}
+                    <div class="flex flex-col gap-[.5rem] items-end">
+                        <form hx-post="/auth/logout" hx-indicator="#loader-indicator" hx-target-error="#error-message">
+                            <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
+                            <button class="flex items-center gap-[.5rem] cursor-pointer py-[.5rem] px-[1rem]
+                            bg-blue-600 text-white rounded hover:bg-blue-800 hover:text-white transition" type="submit">
+                                <i class="fa-solid fa-door-open"></i>
+                                <span>Logout</span>
+                            </button>
+                        </form>
+                        <span class="underline text-[.9rem]">{{ .email }}</span>
+                    </div>
+                {{ else }}
+                    <a class="text-[.9rem] cursor-pointer py-[.5rem] px-[1rem] bg-blue-600 text-white rounded
+                    hover:bg-blue-800 hover:text-white transition"
+                    href="/login">login</a>
                 {{ end }}
             </div>
+            <div id="content" class="flex justify-between">
+                <div class="flex flex-col gap-[1rem]">
+                    <div>
+                        <h2 class="text-[1.2rem] font-semibold">Menu</h2>
+                        {{ range .menu }}
+                        <p>{{ .Name }}; Rp{{ .Price }}</p>
+                        {{ end }}
+                    </div>
+                    <div>
+                        <p class="font-semibold">Order Here:</p>
+                        <form hx-post="/cart/add" hx-target-error="#error-message">
+                            <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
+                            <input autofocus type="text" name="add-to-cart-menu"
+                                class="outline-none py-[.8rem] px-[1rem] bg-gray-100 font-bold">
+                        </form>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-[1rem] text-right items-end w-[30%]">
+                    <p class="font-semibold text-[1.2rem]">keranjang</p>
+                    <div class="flex flex-col items-end gap-[.5rem]">
+                        {{ if gt (len .cart) 0 }}
+                            {{ range $k, $v := .cart  }}
+                                <div class="flex items-center gap-[.8rem]">
+                                    <span class="capitalize">{{ $k }} Qty {{ $v }} </span>
+                                    <i class="text-[.9rem] fa-solid fa-xmark"></i>
+                                </div>
+                            {{ end }}
+                            <form hx-post="/checkout/add" hx-target-error="#error-message" hx-indicator="#loader-indicator"
+                            class="mt-[1rem] flex items-center gap-[1rem]">
+                                <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
+                                <span>Total: Rp{{ .total }}</span>
+                                <button class="text-[.9rem] cursor-pointer py-[.5rem] px-[1rem] bg-blue-600
+                                    flex gap-[.5rem] items-center text-white rounded
+                                    hover:bg-blue-800 hover:text-white transition" type="submit">
+                                    <i class="fa-solid fa-shopping-cart"></i>
+                                    <span>Checkout</span>
+                                </button>
+                            </form>
+                        {{ else }}
+                            <span>Kosong</span>
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
+            <p class="italic text-[.9rem] text-gray-600">Catatan: Pesan per menu & qty (misal: Mie Seblak;1) lalu tekan enter untuk dimasukan ke keranjang</p>
         </div>
+        <div id="error-message"></div>
     </body>
 </html>
 {{ end }}

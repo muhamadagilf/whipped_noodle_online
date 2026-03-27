@@ -1,16 +1,22 @@
 package middlewares
 
 import (
+	"database/sql"
 	"net/http"
 	"net/url"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
 	"github.com/muhamadagilf/whipped_noodle_online/internal/server"
+	"github.com/muhamadagilf/whipped_noodle_online/util"
 )
+
+type UserCred struct {
+	UserID sql.NullString
+	Email  string
+}
 
 func (m *Middlewares) Authentication(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -18,54 +24,65 @@ func (m *Middlewares) Authentication(next echo.HandlerFunc) echo.HandlerFunc {
 		ctx := c.Request().Context()
 		session, ok := c.Get("session").(*sessions.Session)
 		if !ok {
-			return echo.NewHTTPError(http.StatusInternalServerError, "cannot find session in context")
+			return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
 		}
 
-		userID, ok := session.Values["user_id"].(string)
+		userID, ok := session.Values["user_id"].(sql.NullString)
 		if !ok {
-			return c.String(http.StatusInternalServerError, "cannot find user_id in session")
+			return echo.NewHTTPError(http.StatusInternalServerError, util.NoUserIDError)
 		}
+
+		userEmail, ok := session.Values["user_email"].(string)
+		if !ok {
+			userEmail = ""
+		}
+
+		cart, ok := session.Values["cart"].(util.Cart)
+		if !ok {
+			return echo.NewHTTPError(http.StatusInternalServerError, util.NoCartError)
+		}
+
+		c.Set("cart", &cart)
+		c.Set("userCred", UserCred{
+			UserID: userID,
+			Email:  userEmail,
+		})
 
 		if slices.Contains(server.PublicURL, c.Request().URL.Path) {
 			if c.Request().URL.Path == "/home" {
 				return next(c)
 			}
-			if userID == "" {
+			if !userID.Valid {
 				return next(c)
 			}
 			return c.Redirect(http.StatusFound, "/home")
 		}
 
-		// private url
+		// protected url
 		sessionID, ok := session.Values["session_id"].(string)
 		if !ok {
-			return c.String(http.StatusInternalServerError, "cannot find user_id in session")
+			return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionIDError)
 		}
 
 		sessionData, err := query.GetSessionBySessionID(ctx, sessionID)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error()+"; auth")
-		}
-
-		if userID == "" && !sessionData.UserID.Valid {
+		if err == sql.ErrNoRows {
+			session.Options.MaxAge = -1
+			if err = session.Save(c.Request(), c.Response()); err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err)
+			}
 			redirectURL := "/login?redirect=" + url.QueryEscape(c.Request().URL.Path)
 			return c.Redirect(http.StatusFound, redirectURL)
 		}
 
-		if time.Now().Local().UnixMilli() > sessionData.ExpiredAt {
-			session.Values["is_authenticated"] = false
-			session.Values["user_id"] = ""
-			session.Values["cart"] = ""
-			if err = session.Save(c.Request(), c.Response()); err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err)
-			}
-			if err := query.DeleteSessionBySessionID(ctx, sessionID); err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err)
-			}
-
+		if sessionData.IsAuthenticated == 0 && !sessionData.UserID.Valid {
+			redirectURL := "/login?redirect=" + url.QueryEscape(c.Request().URL.Path)
+			return c.Redirect(http.StatusFound, redirectURL)
 		}
 
-		c.Set("user_id", sessionData.UserID.String)
+		c.Set("userCred", UserCred{
+			UserID: sessionData.UserID,
+			Email:  userEmail,
+		})
 		return next(c)
 	}
 }
@@ -81,6 +98,16 @@ func (m *Middlewares) VerifyRedirectURL(next echo.HandlerFunc) echo.HandlerFunc 
 		}
 		if !slices.Contains(server.ProtectedURL, redirectURL) {
 			return echo.NewHTTPError(http.StatusNotFound, "cannot find URL; auth")
+		}
+		if redirectURL != "" {
+			session, ok := c.Get("session").(*sessions.Session)
+			if !ok {
+				return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
+			}
+			session.Values["return_to"] = redirectURL
+			if err := session.Save(c.Request(), c.Response()); err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err)
+			}
 		}
 		return next(c)
 	}

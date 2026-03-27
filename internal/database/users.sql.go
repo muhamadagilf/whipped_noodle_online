@@ -1,6 +1,9 @@
 package database
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 const getUserByEmail = `SELECT * FROM users WHERE email=?`
 
@@ -11,8 +14,10 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
 		&i.Email,
-		&i.HashedPassword,
+		&i.VerifiedEmail,
+		&i.Picture,
 	); err != nil {
 		return i, err
 	}
@@ -22,8 +27,8 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, nil
 }
 
-const createUser = `INSERT INTO users(id, name, email, verified_email, picture)
-VALUES (?,?,?,?,?)`
+const createUser = `INSERT INTO users(id, created_at, updated_at, name, email, verified_email, picture)
+VALUES (?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING;`
 
 type CreateUserParam struct {
 	ID            string
@@ -36,6 +41,8 @@ type CreateUserParam struct {
 func (q *Queries) CreateUser(ctx context.Context, args CreateUserParam) error {
 	_, err := q.db.ExecContext(ctx, createUser,
 		args.ID,
+		time.Now().Local().String(),
+		time.Now().Local().String(),
 		args.Name,
 		args.Email,
 		args.VerifiedEmail,

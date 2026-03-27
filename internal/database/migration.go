@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,8 +10,8 @@ import (
 
 const createUsersTable = `CREATE TABLE IF NOT EXISTS users (
 	id TEXT PRIMARY KEY,
-	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at TEXT NOT NULL,
+	updated_at TEXT NOT NULL,
 	name TEXT NOT NULL,
 	email TEXT NOT NULL UNIQUE,
 	verified_email TEXT NOT NULL UNIQUE,
@@ -21,8 +20,8 @@ const createUsersTable = `CREATE TABLE IF NOT EXISTS users (
 
 const createSessionsTable = `CREATE TABLE IF NOT EXISTS sessions (
 	id TEXT PRIMARY KEY,
-	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at TEXT NOT NULL,
+	updated_at TEXT NOT NULL,
 	session_id TEXT NOT NULL UNIQUE,
 	is_authenticated INTEGER NOT NULL DEFAULT 0,
 	expired_at INTEGER NOT NULL,
@@ -35,8 +34,25 @@ const createItemsTable = `CREATE TABLE IF NOT EXISTS menus (
 	updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	name TEXT NOT NULL UNIQUE,
 	description TEXT NOT NULL,
-	price FLOAT NOT NULL,
+	price INTEGER NOT NULL,
 	is_stocked INTEGER NOT NULL DEFAULT 1
+);`
+
+const createOrdersTable = `CREATE TABLE IF NOT EXISTS orders (
+	id TEXT PRIMARY KEY,
+	created_at TEXT NOT NULL,
+	updated_at TEXT NOT NULL,
+	menu_id TEXT REFERENCES menus(id) ON DELETE CASCADE
+);`
+
+const createCheckoutsTable = `CREATE TABLE IF NOT EXISTS checkouts (
+	id TEXT PRIMARY KEY,
+	created_at TEXT NOT NULL,
+	updated_at TEXT NOT NULL,
+	order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+	user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	status TEXT NOT NULL,
+	total_payment INTEGER NOT NULL
 );`
 
 func Migrate(DB *sql.DB) error {
@@ -56,6 +72,14 @@ func Migrate(DB *sql.DB) error {
 		return err
 	}
 
+	if _, err := DB.Exec(createOrdersTable); err != nil {
+		return err
+	}
+
+	if _, err := DB.Exec(createCheckoutsTable); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -67,43 +91,43 @@ func (q *Queries) InsertMainMenuToDB() error {
 			ID:          "",
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
-			Name:        "Mie Seblak",
+			Name:        "mie seblak",
 			Description: "Lorem Ipsum endurance testing desc type nooodle list",
-			Price:       15.000,
+			Price:       15000,
 			IsStocked:   1,
 		},
 		{
 			ID:          "",
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
-			Name:        "Mie Goreng Bumbu Udang",
+			Name:        "mie goreng bumbu udang",
 			Description: "Lorem Ipsum endurance testing desc type nooodle list",
-			Price:       16.000,
+			Price:       16000,
 			IsStocked:   1,
 		},
 		{
 			ID:          "",
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
-			Name:        "Mie Rebus Bumbu Udang",
+			Name:        "mie rebus bumbu udang",
 			Description: "Lorem Ipsum endurance testing desc type nooodle list",
-			Price:       15.000,
+			Price:       15000,
 			IsStocked:   1,
 		},
 		{
 			ID:          "",
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
-			Name:        "Nasi Goreng",
+			Name:        "nasi goreng",
 			Description: "Lorem Ipsum endurance testing desc type nooodle list",
-			Price:       16.000,
+			Price:       16000,
 			IsStocked:   1,
 		},
 	}
 	if err := q.Transaction(context.Background(), myDB, func(qtx *Queries) error {
 		for _, item := range items {
 			id := uuid.New().String()
-			res, err := myDB.Exec(insertMenus,
+			_, err := myDB.Exec(insertMenus,
 				id,
 				item.Name,
 				item.Description,
@@ -113,7 +137,6 @@ func (q *Queries) InsertMainMenuToDB() error {
 			if err != nil {
 				return err
 			}
-			log.Println("[INFO_DB]: ", res)
 		}
 		return nil
 	}); err != nil {

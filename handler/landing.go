@@ -9,10 +9,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
 	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
 	"github.com/muhamadagilf/whipped_noodle_online/internal/server"
+	"github.com/muhamadagilf/whipped_noodle_online/middlewares"
+	"github.com/muhamadagilf/whipped_noodle_online/util"
 )
 
 type UserData struct {
@@ -27,28 +30,42 @@ func (h *Handler) Homepage(c echo.Context) error {
 	query := h.Server.Queries
 	csrf, ok := c.Get("csrf").(string)
 	if !ok {
-		return echo.NewHTTPError(
-			http.StatusInternalServerError,
-			"cannot find csrf_token in context",
-		)
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCSRFError)
 	}
 	menu, err := query.GetAllMenu(c.Request().Context())
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
+	cart, ok := c.Get("cart").(*util.Cart)
+	if !ok {
+		return echo.NewHTTPError(
+			http.StatusInternalServerError,
+			"cannot find cart in session",
+		)
+	}
+	userCred, ok := c.Get("userCred").(middlewares.UserCred)
+	if !ok {
+		return echo.NewHTTPError(
+			http.StatusInternalServerError,
+			"cannot find userCred in context",
+		)
+	}
+
+	// c.Response().Header().Set("Cache-Control", "max-age=86400")
 	return c.Render(http.StatusOK, "home", Data{
 		"csrf_token": csrf,
 		"menu":       menu,
+		"cart":       cart.Menus,
+		"total":      cart.Total,
+		"cred":       userCred,
+		"email":      userCred.Email,
 	})
 }
 
 func (h *Handler) Loginpage(c echo.Context) error {
 	csrf, ok := c.Get("csrf").(string)
 	if !ok {
-		return echo.NewHTTPError(
-			http.StatusInternalServerError,
-			"cannot find csrf_token in context",
-		)
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCSRFError)
 	}
 	return c.Render(http.StatusOK, "login", Data{
 		"csrf_token": csrf,
@@ -56,11 +73,11 @@ func (h *Handler) Loginpage(c echo.Context) error {
 }
 
 func (h *Handler) Login(c echo.Context) error {
-	returnToURL := c.QueryParam("redirect")
-	if returnToURL != "" {
-		c.Set("returnToURL", returnToURL)
-	}
-	stateID := fmt.Sprintf("oauthstate%v", time.Now().Local().UnixMilli()*time.Now().Local().UnixMicro())
+	stateID := fmt.Sprintf(
+		"oauthstate%v%v",
+		uuid.New().String(),
+		time.Now().Local().UnixMilli()*time.Now().Local().UnixMicro(),
+	)
 	stateCookie := http.Cookie{
 		Name:     "oauth_state",
 		HttpOnly: true,
@@ -107,17 +124,20 @@ func (h *Handler) OauthCallback(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-
 	userData := &UserData{}
 	if err := json.Unmarshal(data, userData); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
+
 	session, ok := c.Get("session").(*sessions.Session)
 	if !ok {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
+	}
+	sessionID, ok := session.Values["session_id"].(string)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionIDError)
 	}
 
-	sessionID := session.Values["session_id"].(string)
 	if err = query.Transaction(c.Request().Context(), h.Server.DB, func(qtx *database.Queries) error {
 		if err := qtx.CreateUser(c.Request().Context(), database.CreateUserParam{
 			ID:            userData.ID,
@@ -139,15 +159,40 @@ func (h *Handler) OauthCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	session.Values["user_id"] = userData.ID
+	session.Values["user_id"] = sql.NullString{String: userData.ID, Valid: true}
+	session.Values["user_email"] = userData.Email
 	if err := session.Save(c.Request(), c.Response()); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	returnToURL, ok := c.Get("returnToURL").(string)
-	if !ok {
+	returnToURL, ok := session.Values["return_to"].(string)
+	if !ok && returnToURL == "" {
 		returnToURL = "/home"
 	}
-
 	return c.Redirect(http.StatusFound, returnToURL)
+}
+
+func (h *Handler) Logout(c echo.Context) error {
+	time.Sleep(300 * time.Millisecond)
+	query := h.Server.Queries
+	session, ok := c.Get("session").(*sessions.Session)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
+	}
+	sid := session.Values["session_id"].(string)
+	session.Options.MaxAge = -1
+	err := query.Transaction(c.Request().Context(), h.Server.DB, func(qtx *database.Queries) error {
+		if err := qtx.DeleteSessionBySessionID(c.Request().Context(), sid); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	if err := session.Save(c.Request(), c.Response()); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	c.Response().Header().Set("HX-Redirect", "/home")
+	return c.NoContent(http.StatusOK)
 }

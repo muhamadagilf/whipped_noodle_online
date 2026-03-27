@@ -1,9 +1,12 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/gob"
 	"html/template"
 	"io"
 	"log"
+	"net/http"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -12,6 +15,7 @@ import (
 	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
 	"github.com/muhamadagilf/whipped_noodle_online/internal/server"
 	"github.com/muhamadagilf/whipped_noodle_online/middlewares"
+	"github.com/muhamadagilf/whipped_noodle_online/util"
 
 	_ "modernc.org/sqlite"
 )
@@ -35,8 +39,11 @@ func main() {
 		log.Println("use container environment or .env not found")
 	}
 
+	gob.Register(util.Cart{})
+	gob.Register(sql.NullString{})
 	e := echo.New()
 	e.Renderer = newTemplates()
+	e.HTTPErrorHandler = util.HTTPErrorHandling
 	e.Static("/static", "static")
 
 	s, err := server.NewServer()
@@ -64,10 +71,10 @@ func main() {
 	mdl := middlewares.NewMiddlewares(s)
 	h := handler.NewHandler(s)
 
-	public := e.Group("")
-	public.Use(middleware.RequestLogger())
-	public.Use(mdl.Session)
-	public.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+	r := e.Group("")
+	r.Use(middleware.RequestLogger())
+	r.Use(mdl.Session)
+	r.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
 		CookiePath:     "/",
 		TokenLength:    32,
 		TokenLookup:    "form:_csrf",
@@ -75,15 +82,26 @@ func main() {
 		CookieName:     "_csrf",
 		CookieMaxAge:   86400,
 		CookieHTTPOnly: true,
+		CookieSameSite: http.SameSiteLaxMode,
 	}))
-	public.Use(mdl.Authentication)
-	public.Use(mdl.VerifyRedirectURL)
+	r.Use(mdl.Authentication)
+	r.Use(mdl.VerifyRedirectURL)
 
-	public.GET("/home", h.Homepage)
-	public.GET("/login", h.Loginpage)
-	public.POST("/auth/login", h.Login)
-	public.GET("/auth/oauth/callback", h.OauthCallback)
-	public.GET("/checkout", h.Checkout)
+	// ROUTES
+	r.GET("/home", h.Homepage)
+	r.GET("/login", h.Loginpage)
+	r.POST("/auth/login", h.Login)
+	r.POST("/auth/logout", h.Logout)
+	r.GET("/auth/oauth/callback", h.OauthCallback)
+
+	r.POST("/cart/add", h.AddToCartSession)
+	r.DELETE("/cart/delete/:menu", h.DeleteFromCartSession)
+
+	r.GET("/checkout", h.Checkoutpage)
+	r.POST("/checkout", h.Checkout)
+
+	// BG_WORKER
+	go util.DBSessionCleanUp(s.Queries)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
