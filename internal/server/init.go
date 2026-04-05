@@ -15,12 +15,11 @@ import (
 var PublicURL = []string{
 	"/home",
 	"/login",
-	"/sign",
 	"/auth/login",
 	"/auth/oauth/callback",
 	"/favicon.ico",
 	"/cart/add",
-	"/cart/delete",
+	"/cart/delete/:menuID",
 }
 
 var ProtectedURL = []string{
@@ -51,7 +50,7 @@ func NewServer() (*Server, error) {
 	store.Options.Path = "/"
 	store.Options.HttpOnly = true
 	store.Options.Secure = false
-	store.Options.SameSite = http.SameSiteStrictMode
+	store.Options.SameSite = http.SameSiteLaxMode
 	store.Options.MaxAge = int(12 * time.Hour)
 
 	return &Server{

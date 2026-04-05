@@ -28,19 +28,25 @@
             </div>
             <div id="content" class="flex justify-between">
                 <div class="flex flex-col gap-[1rem]">
-                    <div>
-                        <h2 class="text-[1.2rem] font-semibold">Menu</h2>
+                    <div class="flex flex-col gap-[.5rem]">
+                        <h2 class="text-[1.2rem] font-semibold mb-[.5rem]">Menu</h2>
                         {{ range .menu }}
-                        <p>{{ .Name }}; Rp{{ .Price }}</p>
+                        <div>
+                            <p class="menu capitalize" data-menuid="{{ .ID }}" data-price="{{ .Price }}">{{ .Name }}</p>
+                            <p>Rp{{ .Price }}</p>
+                        </div>
                         {{ end }}
                     </div>
                     <div>
                         <p class="font-semibold">Order Here:</p>
-                        <form hx-post="/cart/add" hx-target-error="#error-message">
-                            <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
-                            <input autofocus type="text" name="add-to-cart-menu"
-                                class="outline-none py-[.8rem] px-[1rem] bg-gray-100 font-bold">
-                        </form>
+                        <div class="flex items-center  bg-gray-100 rounded">
+                            <form id="form-add-to-cart" hx-post="/cart/add" hx-target-error="#error-message">
+                                <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
+                                <input id="add-to-cart" autofocus type="text" name="add-to-cart"
+                                    class="outline-none py-[.8rem] px-[1rem] font-bold">
+                            </form>
+                            <i class="fa-solid fa-clipboard-list text-[1.5rem] px-[.8rem]"></i>
+                        </div>
                     </div>
                 </div>
                 <div class="flex flex-col gap-[1rem] text-right items-end w-[30%]">
@@ -49,11 +55,11 @@
                         {{ if gt (len .cart) 0 }}
                             {{ range $k, $v := .cart  }}
                                 <div class="flex items-center gap-[.8rem]">
-                                    <span class="capitalize">{{ $k }} Qty {{ $v }} </span>
-                                    <i class="text-[.9rem] fa-solid fa-xmark"></i>
+                                    <span class="capitalize">{{ $v.Name }} Qty {{ $v.Qty }}</span>
+                                    <i id="delete-from-cart" hx-delete="/cart/delete/{{ $k }}" class="text-[.9rem] fa-solid fa-xmark cursor-pointer"></i>
                                 </div>
-                            {{ end }}
-                            <form hx-post="/checkout/add" hx-target-error="#error-message" hx-indicator="#loader-indicator"
+                           {{ end }}
+                           <form hx-post="/checkout/add" hx-target-error="#error-message" hx-indicator="#loader-indicator"
                             class="mt-[1rem] flex items-center gap-[1rem]">
                                 <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
                                 <span>Total: Rp{{ .total }}</span>
@@ -74,5 +80,23 @@
         </div>
         <div id="error-message"></div>
     </body>
+    <script>
+       document.body.addEventListener('htmx:configRequest', function (evt) {
+        console.log(evt.detail.elt.id)
+        if (evt.detail.elt.id === "form-add-to-cart") {
+            const menuList = document.querySelectorAll(".menu");
+            const inputMenuVal = document.getElementById("add-to-cart").value.toLowerCase();
+            const menuName = inputMenuVal.split(";", 2)[0];
+            for (const menu of menuList) {
+                if (menuName === menu.textContent.toLowerCase()) {
+                    console.log("REACH BEFORE evt.detail.parameter")
+                    evt.detail.parameters["menu_id"] = menu.dataset.menuid
+                    evt.detail.parameters["price"] = menu.dataset.price
+                    break
+                };
+            };
+        };
+       });
+    </script>
 </html>
 {{ end }}

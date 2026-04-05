@@ -2,22 +2,40 @@ package handler
 
 import (
 	"net/http"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
+	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
 	"github.com/muhamadagilf/whipped_noodle_online/util"
 )
 
 func (h *Handler) AddToCartSession(c echo.Context) error {
-	ctx := c.Request().Context()
-	query := h.Server.Queries
+	addToCart := c.FormValue("add-to-cart")
+	menuID := c.FormValue("menu_id")
+	priceStr := c.FormValue("price")
+	nameQtySplit := strings.Split(addToCart, ";")
+	menuName := strings.ToLower(nameQtySplit[0])
+	qtyStr := nameQtySplit[1]
 
-	menuStr := c.FormValue("add-to-cart-menu")
-	menu, err := parseAddToCartRequest(menuStr)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+	if menuName == "" || menuID == "" || priceStr == "" || qtyStr == "" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "empty request body")
 	}
+	if !slices.Contains(database.InMemoryMenu, menuName) {
+		return echo.NewHTTPError(http.StatusBadRequest, util.NoMenuItem)
+	}
+
+	price, err := strconv.Atoi(priceStr)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	qty, err := strconv.Atoi(qtyStr)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
 	session, ok := c.Get("session").(*sessions.Session)
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
@@ -26,8 +44,8 @@ func (h *Handler) AddToCartSession(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
 	}
-	if err := cart.Add(ctx, query, menu.menu, menu.qty); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+	if err = cart.Add(menuName, qty, price, menuID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	session.Values["cart"] = *cart
@@ -40,11 +58,7 @@ func (h *Handler) AddToCartSession(c echo.Context) error {
 }
 
 func (h *Handler) DeleteFromCartSession(c echo.Context) error {
-	ctx := c.Request().Context()
-	query := h.Server.Queries
-	menuStr := c.Param("menu")
-	menuStr = strings.ToLower(menuStr)
-
+	menuID := c.Param("menuID")
 	session, ok := c.Get("session").(*sessions.Session)
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
@@ -53,7 +67,7 @@ func (h *Handler) DeleteFromCartSession(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
 	}
-	if err := cart.Remove(ctx, query, menuStr); err != nil {
+	if err := cart.Remove(menuID); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
@@ -61,5 +75,6 @@ func (h *Handler) DeleteFromCartSession(c echo.Context) error {
 	if err := session.Save(c.Request(), c.Response()); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.Redirect(http.StatusFound, "/home")
+	c.Response().Header().Set("HX-Redirect", "/home")
+	return c.NoContent(http.StatusFound)
 }

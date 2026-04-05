@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
 	"github.com/muhamadagilf/whipped_noodle_online/util"
 )
@@ -17,17 +18,25 @@ func (h *Handler) Checkoutpage(c echo.Context) error {
 	})
 }
 
-// should new checkout entries created, early when user POST Request to /checkout
-// or just creates new order entries first, and checkout later once the user hit "pay"
-// the scenario very likely to lose the information easly, because it still might rely
-// only on in-session information. to constructs orders information on the front-end
-// however i would be lightweight operation for the system, because we dont rush to stores
-// the order data to checkout table, cause user can just leaves it there in the cart
-// wihtout even proceeds the payment.
-// (or even not create entries on the order table, for more convinient DB optimization)
-// main reason would be we dont have to bother to create another bg_worker to clean up orphange entries
-// in both checkout and order table
-
+// so, go with in-session checkout items information. and proceeded with DB operation, once the user hit the payment
+// to really stored the data in DB
 func (h *Handler) Checkout(c echo.Context) error {
+	session, ok := c.Get("session").(*sessions.Session)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
+	}
+	// userCred, ok := c.Get("userCred").(middlewares.UserCred)
+	// if !ok {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, util.NoUserIDError)
+	// }
+	// cart, ok := c.Get("cart").(*util.Cart)
+	// if !ok {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, util.NoCartError)
+	// }
+
+	if err := session.Save(c.Request(), c.Response()); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	c.Response().Header().Set("HX-Redirect", "/checkout")
 	return c.NoContent(http.StatusCreated)
 }

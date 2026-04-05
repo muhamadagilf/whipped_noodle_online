@@ -17,45 +17,46 @@ var (
 	NoMenuItem         = "menu not found. please order in the menu"
 )
 
+type MenuOrder struct {
+	Name       string
+	Qty, Price int
+}
+
 type Cart struct {
 	ID    string
-	Menus map[string]int
+	Menus map[string]MenuOrder
 	Total int32
 }
 
-func (c *Cart) Add(
-	ctx context.Context,
-	query *database.Queries,
-	menu string, qty int,
-) error {
-	if _, ok := c.Menus[menu]; !ok {
-		c.Menus[menu] = qty
-	} else {
-		c.Menus[menu] += qty
-	}
+type Order struct {
+	ID    string
+	Menus []string
+}
 
-	menuData, err := query.GetMenuByName(ctx, menu)
-	if err != nil {
-		return err
+func (c *Cart) Add(menu string, qty int, price int, menuID string) error {
+	if i, ok := c.Menus[menuID]; !ok {
+		c.Menus[menuID] = MenuOrder{Name: menu, Qty: qty, Price: price}
+	} else {
+		i.Qty += qty
+		c.Menus[menuID] = i
 	}
-	c.Total += int32(menuData.Price * qty)
+	c.Total += int32(price * qty)
 	return nil
 }
 
-func (c *Cart) Remove(
-	ctx context.Context,
-	query *database.Queries,
-	menu string,
-) error {
-	if qty, ok := c.Menus[menu]; ok {
-		delete(c.Menus, menu)
-		menuData, err := query.GetMenuByName(ctx, menu)
-		if err != nil {
-			return err
-		}
-		c.Total -= int32(menuData.Price * qty)
+func (c *Cart) Remove(menuID string) error {
+	if i, ok := c.Menus[menuID]; ok {
+		delete(c.Menus, menuID)
+		c.Total -= int32(i.Price * i.Qty)
 	} else {
 		return errors.New("cannot find menu in the cart")
 	}
+	return nil
+}
+
+func (c *Cart) CreateOrder(
+	ctx context.Context,
+	query *database.Queries,
+) error {
 	return nil
 }

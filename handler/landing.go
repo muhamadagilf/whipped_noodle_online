@@ -38,20 +38,13 @@ func (h *Handler) Homepage(c echo.Context) error {
 	}
 	cart, ok := c.Get("cart").(*util.Cart)
 	if !ok {
-		return echo.NewHTTPError(
-			http.StatusInternalServerError,
-			"cannot find cart in session",
-		)
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCartError)
 	}
 	userCred, ok := c.Get("userCred").(middlewares.UserCred)
 	if !ok {
-		return echo.NewHTTPError(
-			http.StatusInternalServerError,
-			"cannot find userCred in context",
-		)
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoUserIDError)
 	}
 
-	// c.Response().Header().Set("Cache-Control", "max-age=86400")
 	return c.Render(http.StatusOK, "home", Data{
 		"csrf_token": csrf,
 		"menu":       menu,

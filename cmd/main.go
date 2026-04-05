@@ -39,8 +39,10 @@ func main() {
 		log.Println("use container environment or .env not found")
 	}
 
+	gob.Register(util.MenuOrder{})
 	gob.Register(util.Cart{})
 	gob.Register(sql.NullString{})
+
 	e := echo.New()
 	e.Renderer = newTemplates()
 	e.HTTPErrorHandler = util.HTTPErrorHandling
@@ -77,7 +79,7 @@ func main() {
 	r.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
 		CookiePath:     "/",
 		TokenLength:    32,
-		TokenLookup:    "form:_csrf",
+		TokenLookup:    "form:_csrf,header:HX-CSRF-TOKEN",
 		ContextKey:     "csrf",
 		CookieName:     "_csrf",
 		CookieMaxAge:   86400,
@@ -95,7 +97,7 @@ func main() {
 	r.GET("/auth/oauth/callback", h.OauthCallback)
 
 	r.POST("/cart/add", h.AddToCartSession)
-	r.DELETE("/cart/delete/:menu", h.DeleteFromCartSession)
+	r.DELETE("/cart/delete/:menuID", h.DeleteFromCartSession)
 
 	r.GET("/checkout", h.Checkoutpage)
 	r.POST("/checkout", h.Checkout)
@@ -103,5 +105,6 @@ func main() {
 	// BG_WORKER
 	go util.DBSessionCleanUp(s.Queries)
 
+	log.Println("SERVER RUNNING ON :8000")
 	e.Logger.Fatal(e.Start(":8000"))
 }

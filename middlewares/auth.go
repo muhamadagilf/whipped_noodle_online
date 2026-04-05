@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"net/url"
 	"slices"
@@ -48,14 +49,19 @@ func (m *Middlewares) Authentication(next echo.HandlerFunc) echo.HandlerFunc {
 			Email:  userEmail,
 		})
 
-		if slices.Contains(server.PublicURL, c.Request().URL.Path) {
-			if c.Request().URL.Path == "/home" {
-				return next(c)
+		log.Println(c.Path())
+		var requestURL string
+		if c.Path() == "/cart/delete/:menuID" {
+			requestURL = c.Path()
+		} else {
+			requestURL = c.Request().URL.Path
+		}
+
+		if slices.Contains(server.PublicURL, requestURL) {
+			if userID.Valid && requestURL == "/login" {
+				return c.Redirect(http.StatusFound, "/home")
 			}
-			if !userID.Valid {
-				return next(c)
-			}
-			return c.Redirect(http.StatusFound, "/home")
+			return next(c)
 		}
 
 		// protected url

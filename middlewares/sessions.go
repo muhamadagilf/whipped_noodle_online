@@ -26,11 +26,16 @@ func (m *Middlewares) Session(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if session.IsNew {
+			log.Println("CREATE NEW ONE")
 			sessionID := fmt.Sprintf("sessid_%v_%v", uuid.New().String(), time.Now().Local().UnixMilli())
 			cartID := fmt.Sprintf("orderid_%v_%v", uuid.New().String(), time.Now().Local().Unix())
 			session.Values["session_id"] = sessionID
 			session.Values["user_id"] = sql.NullString{Valid: false}
-			session.Values["cart"] = util.Cart{ID: cartID, Menus: make(map[string]int), Total: 0}
+			session.Values["cart"] = util.Cart{
+				ID:    cartID,
+				Menus: make(map[string]util.MenuOrder),
+				Total: 0,
+			}
 
 			if err := query.Transaction(c.Request().Context(), m.Server.DB, func(qtx *database.Queries) error {
 				if err := qtx.CreateSession(c.Request().Context(), database.CreateSessionParams{
@@ -44,7 +49,6 @@ func (m *Middlewares) Session(next echo.HandlerFunc) echo.HandlerFunc {
 			}); err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err)
 			}
-
 			log.Println("[SESSION_CREATED]# ", sessionID)
 		}
 
