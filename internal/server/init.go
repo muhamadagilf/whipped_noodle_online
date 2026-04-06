@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
+	"github.com/redis/go-redis/v9"
 )
 
 var PublicURL = []string{
@@ -31,6 +32,7 @@ var ProtectedURL = []string{
 type Server struct {
 	DB           *sql.DB
 	Queries      *database.Queries
+	RDB          *redis.Client
 	SessionName  string
 	SessionStore *sessions.CookieStore
 }
@@ -40,6 +42,12 @@ func NewServer() (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
 
 	sessionKey := os.Getenv("SESSION_KEY")
 	if sessionKey == "" {
@@ -56,6 +64,7 @@ func NewServer() (*Server, error) {
 	return &Server{
 		DB:           db,
 		Queries:      database.New(db),
+		RDB:          rdb,
 		SessionName:  "web_session",
 		SessionStore: store,
 	}, nil

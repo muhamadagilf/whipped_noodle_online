@@ -16,6 +16,7 @@ import (
 	"github.com/muhamadagilf/whipped_noodle_online/internal/server"
 	"github.com/muhamadagilf/whipped_noodle_online/middlewares"
 	"github.com/muhamadagilf/whipped_noodle_online/util"
+	"github.com/redis/go-redis/v9"
 )
 
 type UserData struct {
@@ -27,15 +28,32 @@ type UserData struct {
 }
 
 func (h *Handler) Homepage(c echo.Context) error {
+	rdb := h.Server.RDB
 	query := h.Server.Queries
 	csrf, ok := c.Get("csrf").(string)
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCSRFError)
 	}
-	menu, err := query.GetAllMenu(c.Request().Context())
+
+	var menu []database.Menu
+	cached, err := rdb.Get(c.Request().Context(), "menu:all").Result()
 	if err != nil {
+		if err == redis.Nil {
+			menu, err := query.GetAllMenu(c.Request().Context())
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err)
+			}
+			menuJSON, err := json.Marshal(menu)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err)
+			}
+			rdb.Set(c.Request().Context(), "menu:all", menuJSON, 24*time.Hour)
+		}
+	}
+	if err := json.Unmarshal([]byte(cached), &menu); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
+
 	cart, ok := c.Get("cart").(*util.Cart)
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCartError)
