@@ -53,6 +53,7 @@ func main() {
 		log.Fatal("New s init Failed: ", err)
 	}
 	defer s.DB.Close()
+	defer s.RDB.Close()
 
 	if err := server.InitOAuth(); err != nil {
 		log.Fatal("OAuth Init Failed: ", err)
@@ -100,7 +101,6 @@ func main() {
 	r.DELETE("/cart/delete/:menuID", h.DeleteFromCartSession)
 
 	r.GET("/checkout", h.Checkoutpage)
-	r.POST("/checkout", h.Checkout)
 
 	// BG_WORKER
 	go util.DBSessionCleanUp(s.Queries)

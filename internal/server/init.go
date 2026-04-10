@@ -38,13 +38,21 @@ type Server struct {
 }
 
 func NewServer() (*Server, error) {
-	db, err := sql.Open("sqlite", "./my.db")
+	DBURL := os.Getenv("DB_URL_DEV")
+	if DBURL == "" {
+		return nil, errors.New("cannot find DBURL inside the environment")
+	}
+	db, err := sql.Open("sqlite", DBURL)
 	if err != nil {
 		return nil, err
 	}
 
+	RDBURL := os.Getenv("RDB_URL_DEV")
+	if RDBURL == "" {
+		return nil, errors.New("cannot find RDBURL inside the environment")
+	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     RDBURL,
 		Password: "",
 		DB:       0,
 	})

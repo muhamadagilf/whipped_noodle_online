@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -38,8 +39,8 @@ func (h *Handler) Homepage(c echo.Context) error {
 	var menu []database.Menu
 	cached, err := rdb.Get(c.Request().Context(), "menu:all").Result()
 	if err != nil {
-		if err == redis.Nil {
-			menu, err := query.GetAllMenu(c.Request().Context())
+		if err == redis.Nil || cached == "" {
+			menu, err = query.GetAllMenu(c.Request().Context())
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err)
 			}
@@ -47,11 +48,16 @@ func (h *Handler) Homepage(c echo.Context) error {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err)
 			}
+			log.Println("[REDIS DEBUG] Cache Miss")
 			rdb.Set(c.Request().Context(), "menu:all", menuJSON, 24*time.Hour)
 		}
-	}
-	if err := json.Unmarshal([]byte(cached), &menu); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	} else {
+		log.Println("[REDIS DEBUG] Cache Hit")
+		if err := json.Unmarshal([]byte(cached), &menu); err != nil {
+			log.Println(err, "YEaH")
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+
 	}
 
 	cart, ok := c.Get("cart").(*util.Cart)

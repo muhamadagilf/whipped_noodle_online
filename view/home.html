@@ -8,7 +8,8 @@
         <div class="flex flex-col gap-[2rem] w-[70%] mt-[4rem]">
             <div id="header" class="flex justify-between items-center">
                 <h1 class="font-bold text-[1.2rem]">SEBLAK99</h1>
-                {{ if .cred.UserID.Valid }}
+                <div class="flex items-center gap-3">
+                    {{ if .cred.UserID.Valid }}
                     <div class="flex flex-col gap-[.5rem] items-end">
                         <form hx-post="/auth/logout" hx-indicator="#loader-indicator" hx-target-error="#error-message">
                             <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
@@ -20,83 +21,123 @@
                         </form>
                         <span class="underline text-[.9rem]">{{ .email }}</span>
                     </div>
-                {{ else }}
-                    <a class="text-[.9rem] cursor-pointer py-[.5rem] px-[1rem] bg-blue-600 text-white rounded
-                    hover:bg-blue-800 hover:text-white transition"
-                    href="/login">login</a>
-                {{ end }}
-            </div>
-            <div id="content" class="flex justify-between">
-                <div class="flex flex-col gap-[1rem]">
-                    <div class="flex flex-col gap-[.5rem]">
-                        <h2 class="text-[1.2rem] font-semibold mb-[.5rem]">Menu</h2>
-                        {{ range .menu }}
-                        <div>
-                            <p class="menu capitalize" data-menuid="{{ .ID }}" data-price="{{ .Price }}">{{ .Name }}</p>
-                            <p>Rp{{ .Price }}</p>
+                    {{ else }}
+                    <a class="text-[.9rem] cursor-pointer py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-800 hover:text-white transition" href="/login">Login</a>
+                    {{ end }}
+                    <i class="fa-solid fa-shopping-cart text-[1.2rem] pr-2 text-gray-600 cursor-pointer" id="cart-btn"></i>
+                    <div id="cart-section" class="hidden absolute py-[4rem] px-[1.5rem] top-0 right-0 w-[20%] h-[100vh] 
+                    border-l border-gray-300 bg-white shadow-md flex flex-col gap-[1rem]">
+                        <div class="flex justify-between items-center font-semibold pb-2 border-b">
+                            <span>Keranjang</span>
+                            <i class="fa-solid fa-close cursor-pointer" id="cart-close-btn"></i>
                         </div>
-                        {{ end }}
-                    </div>
-                    <div>
-                        <p class="font-semibold">Order Here:</p>
-                        <div class="flex items-center  bg-gray-100 rounded">
-                            <form id="form-add-to-cart" hx-post="/cart/add" hx-target-error="#error-message">
-                                <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
-                                <input id="add-to-cart" autofocus type="text" name="add-to-cart"
-                                    class="outline-none py-[.8rem] px-[1rem] font-bold">
-                            </form>
-                            <i class="fa-solid fa-clipboard-list text-[1.5rem] px-[.8rem]"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col gap-[1rem] text-right items-end w-[30%]">
-                    <p class="font-semibold text-[1.2rem]">keranjang</p>
-                    <div class="flex flex-col items-end gap-[.5rem]">
-                        {{ if gt (len .cart) 0 }}
-                            {{ range $k, $v := .cart  }}
-                                <div class="flex items-center gap-[.8rem]">
-                                    <span class="capitalize">{{ $v.Name }} Qty {{ $v.Qty }}</span>
-                                    <i id="delete-from-cart" hx-delete="/cart/delete/{{ $k }}" class="text-[.9rem] fa-solid fa-xmark cursor-pointer"></i>
+                        <div class="flex flex-col gap-3">
+                            {{ if gt (len .cart) 0 }}
+                                {{ range $k, $v := .cart }}
+                                <div class="cart-menu flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-gray-300 w-10 h-10 rounded-sm"></div>
+                                        <div class="flex flex-col">
+                                            <span class="font-semibold capitalize">{{ $v.Name  }}</span>
+                                            <spain class="text-[.9rem]">Qty {{ $v.Qty }}</span>
+                                        </div>
+                                    </div>
+                                    <i hx-delete="/cart/delete/{{ $k }}"
+                                    class="fa-solid fa-trash text-[.8rem] cursor-pointer hover:text-red-400"></i>
                                 </div>
-                           {{ end }}
-                           <form hx-post="/checkout/add" hx-target-error="#error-message" hx-indicator="#loader-indicator"
-                            class="mt-[1rem] flex items-center gap-[1rem]">
-                                <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
-                                <span>Total: Rp{{ .total }}</span>
-                                <button class="text-[.9rem] cursor-pointer py-[.5rem] px-[1rem] bg-blue-600
-                                    flex gap-[.5rem] items-center text-white rounded
-                                    hover:bg-blue-800 hover:text-white transition" type="submit">
-                                    <i class="fa-solid fa-shopping-cart"></i>
-                                    <span>Checkout</span>
-                                </button>
-                            </form>
-                        {{ else }}
-                            <span>Kosong</span>
-                        {{ end }}
+                                {{ end }}
+                                <div class="flex flex-col gap-1 mt-[4rem]">
+                                    <p>Total: Rp{{ .total }}</p>
+                                    <a href="/checkout" class="py-2 px-4 bg-blue-600 text-white text-center font-semibold rounded-sm">Checkout</a>
+                                </div>
+                            {{ else }}
+                                <p class="font-semibold text-gray-400 text-[1.2rem] text-center">Kosong</p>
+                            {{ end }}
+                        </div>
                     </div>
                 </div>
             </div>
-            <p class="italic text-[.9rem] text-gray-600">Catatan: Pesan per menu & qty (misal: Mie Seblak;1) lalu tekan enter untuk dimasukan ke keranjang</p>
+            <div id="content" class="flex flex-col gap-[1.5rem]">
+                <div class="corousel-section bg-gray-300 h-[40vh] rounded-sm"></div>
+                <div class="order-menu-section flex flex-col gap-[2rem]">
+                    <h2 class="uppercase font-bold text-[1.2rem] border-b border-black">Menu</h2>
+                    <form hx-post="/cart/add" hx-target-error="#error-message" class="flex flex-col gap-[1rem]">
+                        <input type="hidden" name="_csrf" value="csrf_token">
+                        <div class="flex items-center gap-[.8rem]">
+                            {{ range .menu }}
+                            <div>
+                                <input id="{{ .ID }}" type="radio" name="menu-added" class="hidden peer"
+                                value="{{ .ID }};{{ .Name }};{{ .Price }}" required>
+                                <label for="{{ .ID }}"
+                                class="pl-2 pr-4 py-2 text-sm font-medium text-heading capitalize cursor-pointer
+                                peer-checked:bg-blue-600 peer-checked:text-white border border-gray-600 rounded-sm
+                                flex gap-[.8rem] items-center">
+                                    <div class="bg-gray-300 w-15 h-15 rounded-sm"></div>
+                                    <div class="flex flex-col gap-[.3rem]">
+                                        <span>{{ .Name }}</span>
+                                        <span class="text-[.9rem]">Rp{{ .Price }}</span>
+                                    </div>
+                                </label>
+                            </div>
+                            {{ end }}
+                        </div>
+                        <div>
+                            <p class="font-semibold">Choose Quantity:</p>
+                            <div class="border border-gray-600 w-[fit-content] px-[.5rem] py-[.3rem] mt-[.5rem] rounded-sm">
+                                <button type="button" id="dec-btn" class="border-r border-gray-600 pr-2 cursor-pointer">
+                                    <i class="fa-solid fa-minus"></i>
+                                </button>
+                                <input type="number" name="menu-qty" id="menu-qty" min="1" value="1"
+                                class="w-10 font-semibold text-center [appearance:textfield] 
+                                [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <button type="button" id="inc-btn" class="border-l border-gray-600 pl-2 cursor-pointer">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="flex items-center justify-center gap-2 px-[.8rem] py-3 cursor-pointer
+                        rounded-sm hover:bg-blue-800 bg-blue-600 text-white w-[fit-content] mt-[1rem]">
+                            <i class="fa-solid fa-shopping-cart text-[.9rem]"></i>
+                            <span class="font-semibold m-0 text-[1rem]">Masuk Keranjang</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
         <div id="error-message"></div>
     </body>
     <script>
-       document.body.addEventListener('htmx:configRequest', function (evt) {
-        console.log(evt.detail.elt.id)
-        if (evt.detail.elt.id === "form-add-to-cart") {
-            const menuList = document.querySelectorAll(".menu");
-            const inputMenuVal = document.getElementById("add-to-cart").value.toLowerCase();
-            const menuName = inputMenuVal.split(";", 2)[0];
-            for (const menu of menuList) {
-                if (menuName === menu.textContent.toLowerCase()) {
-                    console.log("REACH BEFORE evt.detail.parameter")
-                    evt.detail.parameters["menu_id"] = menu.dataset.menuid
-                    evt.detail.parameters["price"] = menu.dataset.price
-                    break
-                };
-            };
-        };
-       });
+        document.addEventListener('DOMContentLoaded', function(event) {
+            const menuQty = document.getElementById('menu-qty');
+            const cartSection = document.getElementById('cart-section');
+            const cartMenus = document.querySelectorAll('.cart-menu');
+            document.getElementById('dec-btn').addEventListener('click', function() {
+                let x = Number(menuQty.value)
+                menuQty.value = x - 1
+                if (x === 1) {
+                    menuQty.value = 1
+                }
+            });
+            document.getElementById('inc-btn').addEventListener('click', function() {
+                let x = Number(menuQty.value)
+                menuQty.value = x + 1
+            });
+
+            document.getElementById('cart-btn').addEventListener('click', function() {
+                cartSection.classList.remove('hidden')
+            });
+            document.getElementById('cart-close-btn').addEventListener('click', function() {
+                cartSection.classList.add('hidden')
+            });
+
+            if (cartMenus.length > 0) {
+                document.getElementById('cart-btn').classList.add("text-yellow-600");
+                document.getElementById('cart-btn').classList.remove("text-gray-600");
+            } else {
+                document.getElementById('cart-btn').classList.remove("text-yellow-600");
+                document.getElementById('cart-btn').classList.add("text-gray-600");
+            }
+        });
     </script>
 </html>
 {{ end }}

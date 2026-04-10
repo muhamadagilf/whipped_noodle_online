@@ -76,8 +76,8 @@ func (m *Middlewares) Authentication(next echo.HandlerFunc) echo.HandlerFunc {
 			if err = session.Save(c.Request(), c.Response()); err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err)
 			}
-			redirectURL := "/login?redirect=" + url.QueryEscape(c.Request().URL.Path)
-			return c.Redirect(http.StatusFound, redirectURL)
+			// redirectURL := "/login?redirect=" + url.QueryEscape(c.Request().URL.Path)
+			return c.Redirect(http.StatusFound, "/home")
 		}
 
 		if sessionData.IsAuthenticated == 0 && !sessionData.UserID.Valid {

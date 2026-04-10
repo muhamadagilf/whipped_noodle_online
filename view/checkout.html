@@ -3,8 +3,22 @@
 <html>
     {{ template "head" . }}
     <title>Checkout</title>
-    <body>
-        <h1 class="font-semibold text-[1.5rem]">CHECKOUT</h1>
+    <body hx-ext="response-targets" class="flex flex-col items-center gap-[1.5rem]">
+        <div class="flex flex-col gap-[2rem] w-[70%] mt-[4rem]">
+            <p>{{ .cart_id }}</p>
+            <div class="flex flex-col gap-[1rem]">
+            {{ range $k, $v := .cart_menus  }}
+                <div class="flex justify-between">
+                    <div class="flex flex-col gap-[.5rem]">
+                    <span>{{ $v.Name }}</span>
+                    <span>{{ $v.Price }}</span>
+                    </div>
+                    <span>x{{ $v.Qty }}</span>
+                </div>
+            {{ end }}
+            </div>
+            <p>{{ .total_payment }}</p>
+        </div>
     </body>
 </html>
 {{ end }}

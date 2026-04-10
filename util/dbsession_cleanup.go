@@ -10,7 +10,8 @@ import (
 )
 
 func DBSessionCleanUp(q *database.Queries) {
-	ticker := time.NewTicker(30 * time.Minute)
+	log.Println("[BG_WORKER_DEBUG]# DB sessions cleanup running")
+	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 	for {
 		<-ticker.C

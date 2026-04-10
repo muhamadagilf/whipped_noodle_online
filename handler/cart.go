@@ -13,12 +13,12 @@ import (
 )
 
 func (h *Handler) AddToCartSession(c echo.Context) error {
-	addToCart := c.FormValue("add-to-cart")
-	menuID := c.FormValue("menu_id")
-	priceStr := c.FormValue("price")
-	nameQtySplit := strings.Split(addToCart, ";")
-	menuName := strings.ToLower(nameQtySplit[0])
-	qtyStr := nameQtySplit[1]
+	addToCartMenu := c.FormValue("menu-added")
+	qtyStr := c.FormValue("menu-qty")
+	s := strings.SplitN(addToCartMenu, ";", 3)
+	menuID := s[0]
+	menuName := s[1]
+	priceStr := s[2]
 
 	if menuName == "" || menuID == "" || priceStr == "" || qtyStr == "" {
 		return echo.NewHTTPError(http.StatusInternalServerError, "empty request body")
