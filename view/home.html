@@ -10,50 +10,32 @@
                 <h1 class="font-bold text-[1.2rem]">SEBLAK99</h1>
                 <div class="flex items-center gap-3">
                     {{ if .cred.UserID.Valid }}
-                    <div class="flex flex-col gap-[.5rem] items-end">
+                    <i class="fa-solid fa-user" id="user-btn"></i>
+                    <div id="user-logout-section" class="hidden absolute top-8 right-[22rem] py-2 px-3 flex flex-col gap-2 bg-white shadow-sm rounded-sm border border-gray-300">
+                        <span class="underline text-[.9rem]">{{ .cred.Email  }}</span>
                         <form hx-post="/auth/logout" hx-indicator="#loader-indicator" hx-target-error="#error-message">
                             <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
-                            <button class="flex items-center gap-[.5rem] cursor-pointer py-[.5rem] px-[1rem]
+                            <button class="flex items-center gap-[.5rem] cursor-pointer py-[.5rem] px-[1rem] text-[.7rem]
                             bg-blue-600 text-white rounded hover:bg-blue-800 hover:text-white transition" type="submit">
                                 <i class="fa-solid fa-door-open"></i>
                                 <span>Logout</span>
                             </button>
                         </form>
-                        <span class="underline text-[.9rem]">{{ .email }}</span>
                     </div>
                     {{ else }}
                     <a class="text-[.9rem] cursor-pointer py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-800 hover:text-white transition" href="/login">Login</a>
                     {{ end }}
-                    <i class="fa-solid fa-shopping-cart text-[1.2rem] pr-2 text-gray-600 cursor-pointer" id="cart-btn"></i>
+                    <div>
+                        <i class="fa-solid fa-shopping-cart text-[1.2rem] pr-2 text-gray-600 cursor-pointer" id="cart-btn"></i>
+                        {{ template "cart-count" . }}
+                    </div>
                     <div id="cart-section" class="hidden absolute py-[4rem] px-[1.5rem] top-0 right-0 w-[20%] h-[100vh] 
                     border-l border-gray-300 bg-white shadow-md flex flex-col gap-[1rem]">
                         <div class="flex justify-between items-center font-semibold pb-2 border-b">
                             <span>Keranjang</span>
                             <i class="fa-solid fa-close cursor-pointer" id="cart-close-btn"></i>
                         </div>
-                        <div class="flex flex-col gap-3">
-                            {{ if gt (len .cart) 0 }}
-                                {{ range $k, $v := .cart }}
-                                <div class="cart-menu flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <div class="bg-gray-300 w-10 h-10 rounded-sm"></div>
-                                        <div class="flex flex-col">
-                                            <span class="font-semibold capitalize">{{ $v.Name  }}</span>
-                                            <spain class="text-[.9rem]">Qty {{ $v.Qty }}</span>
-                                        </div>
-                                    </div>
-                                    <i hx-delete="/cart/delete/{{ $k }}"
-                                    class="fa-solid fa-trash text-[.8rem] cursor-pointer hover:text-red-400"></i>
-                                </div>
-                                {{ end }}
-                                <div class="flex flex-col gap-1 mt-[4rem]">
-                                    <p>Total: Rp{{ .total }}</p>
-                                    <a href="/checkout" class="py-2 px-4 bg-blue-600 text-white text-center font-semibold rounded-sm">Checkout</a>
-                                </div>
-                            {{ else }}
-                                <p class="font-semibold text-gray-400 text-[1.2rem] text-center">Kosong</p>
-                            {{ end }}
-                        </div>
+                        {{ template "cart-menu-section" . }}
                     </div>
                 </div>
             </div>
@@ -61,7 +43,7 @@
                 <div class="corousel-section bg-gray-300 h-[40vh] rounded-sm"></div>
                 <div class="order-menu-section flex flex-col gap-[2rem]">
                     <h2 class="uppercase font-bold text-[1.2rem] border-b border-black">Menu</h2>
-                    <form hx-post="/cart/add" hx-target-error="#error-message" class="flex flex-col gap-[1rem]">
+                    <form hx-post="/cart/add" hx-swap="none" hx-target-error="#error-message" class="flex flex-col gap-[1rem]">
                         <input type="hidden" name="_csrf" value="csrf_token">
                         <div class="flex items-center gap-[.8rem]">
                             {{ range .menu }}
@@ -110,7 +92,6 @@
         document.addEventListener('DOMContentLoaded', function(event) {
             const menuQty = document.getElementById('menu-qty');
             const cartSection = document.getElementById('cart-section');
-            const cartMenus = document.querySelectorAll('.cart-menu');
             document.getElementById('dec-btn').addEventListener('click', function() {
                 let x = Number(menuQty.value)
                 menuQty.value = x - 1
@@ -123,6 +104,8 @@
                 menuQty.value = x + 1
             });
 
+            document.getElementById('cart-btn').addEventListener('mousedown', (e) => { e.preventDefault(); });
+
             document.getElementById('cart-btn').addEventListener('click', function() {
                 cartSection.classList.remove('hidden')
             });
@@ -130,13 +113,10 @@
                 cartSection.classList.add('hidden')
             });
 
-            if (cartMenus.length > 0) {
-                document.getElementById('cart-btn').classList.add("text-yellow-600");
-                document.getElementById('cart-btn').classList.remove("text-gray-600");
-            } else {
-                document.getElementById('cart-btn').classList.remove("text-yellow-600");
-                document.getElementById('cart-btn').classList.add("text-gray-600");
-            }
+            document.getElementById('user-btn').addEventListener('mousedown', (e) => { e.preventDefault(); })
+            document.getElementById('user-btn').addEventListener('click', () => {
+                document.getElementById('user-logout-section').classList.toggle("hidden")
+            })
         });
     </script>
 </html>

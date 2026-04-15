@@ -19,7 +19,7 @@
 {{ end }}
 
 {{ block "loader" . }}
-<div id="loader-indicator" class="loader-indicator">
+<div id="loader-indicator" class="loader-indicator z-50">
     <div class="loader"></div>
 </div>
 {{ end }}
@@ -31,4 +31,15 @@
     <i class="fa-solid fa-warning"></i>
     <span>{{ .message }}</span>
 </div>
+{{ end }}
+
+{{ block "logout-btn" . }}
+  <form hx-post="/auth/logout" hx-indicator="#loader-indicator" hx-target-error="#error-message">
+      <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
+      <button class="flex items-center gap-[.5rem] cursor-pointer py-[.5rem] px-[1rem]
+      bg-blue-600 text-white rounded hover:bg-blue-800 hover:text-white transition" type="submit">
+          <i class="fa-solid fa-door-open"></i>
+          <span>Logout</span>
+      </button>
+  </form>
 {{ end }}

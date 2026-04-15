@@ -53,8 +53,11 @@ func (h *Handler) AddToCartSession(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	c.Response().Header().Set("HX-Redirect", "/home")
-	return c.NoContent(http.StatusCreated)
+	c.Render(http.StatusOK, "cart-count", Data{"cart": *cart})
+	return c.Render(http.StatusOK, "cart-menu-section", Data{
+		"cart":  cart.Menus,
+		"total": cart.Total,
+	})
 }
 
 func (h *Handler) DeleteFromCartSession(c echo.Context) error {
@@ -75,6 +78,10 @@ func (h *Handler) DeleteFromCartSession(c echo.Context) error {
 	if err := session.Save(c.Request(), c.Response()); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	c.Response().Header().Set("HX-Redirect", "/home")
-	return c.NoContent(http.StatusFound)
+
+	c.Render(http.StatusOK, "cart-count", Data{"cart": *cart})
+	return c.Render(http.StatusOK, "cart-menu-section", Data{
+		"cart":  cart.Menus,
+		"total": cart.Total,
+	})
 }

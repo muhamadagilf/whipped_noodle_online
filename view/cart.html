@@ -1,0 +1,36 @@
+{{ block "cart-count" . }}
+<span id="cart-count" hx-swap-oob="true" 
+class="font-semibold bg-blue-600 py-[.09rem] px-2 rounded-full text-center text-white">
+{{ if .cart.TotalQty }}
+    {{ .cart.TotalQty }}
+{{ else }}
+    0
+{{ end }}
+</span>
+{{ end }}
+
+{{ block "cart-menu-section" . }}
+<div id="cart-menu-section" hx-swap-oob="true" class="flex flex-col gap-3">
+    {{ if gt (len .cart) 0 }}
+        {{ range $k, $v := .cart }}
+        <div class="cart-menu flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-gray-300 w-10 h-10 rounded-sm"></div>
+                <div class="flex flex-col">
+                    <span class="font-semibold capitalize">{{ $v.Name  }}</span>
+                    <spain class="text-[.9rem]">Qty {{ $v.Qty }}</span>
+                </div>
+            </div>
+            <i hx-delete="/cart/delete/{{ $k }}"
+            class="fa-solid fa-trash text-[.8rem] cursor-pointer hover:text-red-400"></i>
+        </div>
+        {{ end }}
+        <div class="flex flex-col gap-1 mt-[4rem]">
+            <p>Total: Rp{{ .total }}</p>
+            <a href="/checkout" class="py-2 px-4 bg-blue-600 text-white text-center font-semibold rounded-sm">Checkout</a>
+        </div>
+    {{ else }}
+        <p class="font-semibold text-gray-400 text-[1.2rem] text-center">Kosong</p>
+    {{ end }}
+</div>
+{{ end }}

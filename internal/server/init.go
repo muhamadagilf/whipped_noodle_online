@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
@@ -67,7 +66,7 @@ func NewServer() (*Server, error) {
 	store.Options.HttpOnly = true
 	store.Options.Secure = false
 	store.Options.SameSite = http.SameSiteLaxMode
-	store.Options.MaxAge = int(12 * time.Hour)
+	store.Options.MaxAge = 43200
 
 	return &Server{
 		DB:           db,
