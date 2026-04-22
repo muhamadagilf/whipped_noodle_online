@@ -17,9 +17,8 @@ func (h *Handler) Checkoutpage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCartError)
 	}
 	return c.Render(http.StatusOK, "checkout", Data{
-		"csrf_token":    csrf,
-		"cart_id":       cart.ID,
-		"cart_menus":    cart.Menus,
-		"total_payment": cart.Total,
+		"csrf_token":   csrf,
+		"cart":         cart,
+		"totalPayment": cart.Total + cart.DeliveryFee,
 	})
 }

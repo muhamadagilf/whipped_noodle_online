@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -72,7 +73,8 @@ func main() {
 	}
 
 	mdl := middlewares.NewMiddlewares(s)
-	h := handler.NewHandler(s)
+	newValidate := validator.New()
+	h := handler.NewHandler(s, newValidate)
 
 	r := e.Group("")
 	r.Use(middleware.RequestLogger())
@@ -97,10 +99,14 @@ func main() {
 	r.POST("/auth/logout", h.Logout)
 	r.GET("/auth/oauth/callback", h.OauthCallback)
 
-	r.POST("/cart/add", h.AddToCartSession)
-	r.DELETE("/cart/delete/:menuID", h.DeleteFromCartSession)
+	r.POST("/cart/add", h.AddToCart)
+	r.DELETE("/cart/delete/:menuID", h.DeleteFromCart)
 
 	r.GET("/checkout", h.Checkoutpage)
+	r.POST("/checkout/transaction/pay", h.Pay)
+	r.POST("/checkout/transaction/notification", h.TransactionNotification)
+	r.GET("/checkout/transaction/success", h.TransactionSuccess)
+	r.GET("/checkout/transaction/failed", h.TransactionFailed)
 
 	// BG_WORKER
 	go util.DBSessionCleanUp(s.Queries)
