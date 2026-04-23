@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"os"
 
 	"github.com/midtrans/midtrans-go"
@@ -24,8 +25,12 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 		})
 	}
 
+	serverKey := os.Getenv("PAYMENT_SERVER_KEY")
+	if serverKey == "" {
+		return nil, errors.New("invalid API Server Key. empty key")
+	}
 	s := snap.Client{}
-	s.New(os.Getenv("PAYMENT_SERVER_KEY"), midtrans.Sandbox)
+	s.New(serverKey, midtrans.Sandbox)
 	req := &snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  cart.ID,
