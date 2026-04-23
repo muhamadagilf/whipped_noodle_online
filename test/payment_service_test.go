@@ -19,8 +19,9 @@ func TestPaymentService(t *testing.T) {
 				Qty:   2,
 			},
 		},
-		TotalQty: 2,
-		Total:    10000,
+		TotalQty:    2,
+		Total:       10000,
+		DeliveryFee: 5000,
 	}
 
 	testPaymentDetail := util.UserPaymentDetail{
