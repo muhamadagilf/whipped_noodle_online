@@ -15,7 +15,37 @@
     <script src="https://kit.fontawesome.com/128ce8a98d.js" crossorigin="anonymous" ></script>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="../static/css/loader.css">
+    {{ block "title" . }} {{ end  }}
 </head>
+{{ end }}
+
+{{ block "base" .  }}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- htmx cdn -->
+        <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
+            integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
+            crossorigin="anonymous" ></script>
+
+            <!-- response target ext htmx cdn -->
+        <script src="https://cdn.jsdelivr.net/npm/htmx-ext-response-targets@2.0.4"
+            integrity="sha384-T41oglUPvXLGBVyRdZsVRxNWnOOqCynaPubjUVjxhsjFTKrFJGEMm3/0KGmNQ+Pg"
+            crossorigin="anonymous" ></script>
+
+        <!-- tailwind cdn & fontawesome -->
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <script src="https://kit.fontawesome.com/128ce8a98d.js" crossorigin="anonymous" ></script>
+        <link rel="icon" href="data:,">
+        <link rel="stylesheet" href="../static/css/loader.css">
+        {{ block "title" . }}{{ end  }}
+    </head>
+    <body hx-ext="response-targets" class="flex justify-center">
+        <div class="wrapper mt-[4rem] w-[70%]">
+            {{ block "content" . }}{{ end }}
+        </div>
+    </body>
+</html>
 {{ end }}
 
 {{ block "loader" . }}
@@ -31,15 +61,4 @@
     <i class="fa-solid fa-warning"></i>
     <span>{{ .message }}</span>
 </div>
-{{ end }}
-
-{{ block "logout-btn" . }}
-  <form hx-post="/auth/logout" hx-indicator="#loader-indicator" hx-target-error="#error-message">
-      <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
-      <button class="flex items-center gap-[.5rem] cursor-pointer py-[.5rem] px-[1rem]
-      bg-blue-600 text-white rounded hover:bg-blue-800 hover:text-white transition" type="submit">
-          <i class="fa-solid fa-door-open"></i>
-          <span>Logout</span>
-      </button>
-  </form>
 {{ end }}

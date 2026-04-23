@@ -11,7 +11,7 @@ class="font-semibold bg-blue-600 py-[.09rem] px-2 rounded-full text-center text-
 
 {{ block "cart-menu-section" . }}
 <div id="cart-menu-section" hx-swap-oob="true" class="flex flex-col gap-3">
-    {{ if gt (len .cart) 0 }}
+    {{ if gt (len .cart.Menus ) 0 }}
         {{ range $k, $v := .cart.Menus }}
         <div class="cart-menu flex items-center justify-between">
             <div class="flex items-center gap-2">

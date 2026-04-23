@@ -36,5 +36,7 @@ func TestPaymentService(t *testing.T) {
 	responseTest, err := service.MidtransCreateTransaction(testCart, testPaymentDetail)
 	assert.NoError(t, err, "no return error for midtrans result")
 	assert.NotEmpty(t, responseTest, "no return empty midtrans result")
+	assert.NotEmpty(t, responseTest.Token, "no return empty token")
+	assert.NotEmpty(t, responseTest.RedirectURL, "no return redirect url")
 	log.Println(responseTest)
 }
