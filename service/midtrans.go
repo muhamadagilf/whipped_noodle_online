@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"log"
 	"os"
 
 	"github.com/midtrans/midtrans-go"
@@ -23,6 +24,7 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 			Price: int64(item.Price * item.Qty),
 			Qty:   int32(item.Qty),
 		})
+		log.Println("[TRANSACTION DEBUG] ItemDetail", int64(item.Price*item.Qty))
 	}
 
 	serverKey := os.Getenv("PAYMENT_SERVER_KEY")
@@ -53,6 +55,8 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 			},
 		},
 	}
+
+	log.Println("[TRANSACTION DEBUG] GrossAmount:", int64(cart.Total))
 
 	response, err := s.CreateTransaction(req)
 	if err != nil {
