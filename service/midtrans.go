@@ -34,7 +34,7 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 	req := &snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  cart.ID,
-			GrossAmt: int64(cart.Total + cart.DeliveryFee),
+			GrossAmt: int64(cart.Total),
 		},
 		Items: &itemDetails,
 		CustomerDetail: &midtrans.CustomerDetails{
