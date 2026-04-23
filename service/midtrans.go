@@ -2,9 +2,10 @@ package service
 
 import (
 	"errors"
-	"log"
+	"fmt"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/midtrans/midtrans-go"
 	"github.com/midtrans/midtrans-go/snap"
 	"github.com/muhamadagilf/whipped_noodle_online/util"
@@ -21,11 +22,17 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 		itemDetails = append(itemDetails, midtrans.ItemDetails{
 			ID:    id,
 			Name:  item.Name,
-			Price: int64(item.Price * item.Qty),
+			Price: int64(item.Price),
 			Qty:   int32(item.Qty),
 		})
-		log.Println("[TRANSACTION DEBUG] ItemDetail", int64(item.Price*item.Qty))
 	}
+
+	itemDetails = append(itemDetails, midtrans.ItemDetails{
+		ID:    fmt.Sprintf("DELIVERY-FEE-%v", uuid.New()),
+		Name:  "DELIVERY-FEE",
+		Price: int64(cart.DeliveryFee),
+		Qty:   1,
+	})
 
 	serverKey := os.Getenv("PAYMENT_SERVER_KEY")
 	if serverKey == "" {
@@ -36,7 +43,7 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 	req := &snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  cart.ID,
-			GrossAmt: int64(cart.Total),
+			GrossAmt: int64(cart.Total + cart.DeliveryFee),
 		},
 		Items: &itemDetails,
 		CustomerDetail: &midtrans.CustomerDetails{
@@ -55,8 +62,6 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 			},
 		},
 	}
-
-	log.Println("[TRANSACTION DEBUG] GrossAmount:", int64(cart.Total))
 
 	response, err := s.CreateTransaction(req)
 	if err != nil {
