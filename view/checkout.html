@@ -4,20 +4,71 @@
     {{ template "head" . }}
     <title>Checkout</title>
     <body hx-ext="response-targets" class="flex flex-col items-center gap-[1.5rem]">
-        <div class="flex flex-col gap-[2rem] w-[70%] mt-[4rem]">
-            <p>{{ .cart_id }}</p>
-            <div class="flex flex-col gap-[1rem]">
-            {{ range $k, $v := .cart_menus  }}
-                <div class="flex justify-between">
-                    <div class="flex flex-col gap-[.5rem]">
-                    <span>{{ $v.Name }}</span>
-                    <span>{{ $v.Price }}</span>
-                    </div>
-                    <span>x{{ $v.Qty }}</span>
-                </div>
-            {{ end }}
+        <div class="flex flex-col gap-6 justify-center w-[70%] mt-[4rem]">
+            <div class="header flex items-center justify-between">
+                <h2 class="font-semibold text-[1.3rem]">Checkout</h2>
+                <a href="/home" class="flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back</span>
+                </a>
             </div>
-            <p>{{ .total_payment }}</p>
+            <form action="" class="flex justify-between">
+                <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
+                <div class="left flex flex-col gap-5 w-[50%] [&>div]:flex [&>div]:flex-col [&>div]:gap-3
+                    [&_input]:outline-none [&_input]:border [&_input]:border-gray-400 [&_input]:shadow-md
+                    [&_input]:px-3 [&_input]:h-[4.5vh] [&_label]:font-semibold [&_label]:text-[.9rem]">
+                    <div>
+                        <label for="fullname">Nama Lengkap<span class="text-red-600">*</span></label>
+                        <input type="text" name="fullname" id="fullname" value="{{ .user.Name  }}">
+                    </div>
+                    <div>
+                        <label for="email">Email<span class="text-red-600">*</span></label>
+                        <input type="text" name="email" id="email" value="{{ .user.Email }}">
+                    </div>
+                    <div>
+                        <label for="phone">Telp<span class="text-red-600">*</span></label>
+                        <input type="text" name="phone" id="phone">
+                    </div>
+                    <div>
+                        <label for="address">Alamat Pengiriman<span class="text-red-600">*</span></label>
+                        <input type="text" name="address" id="address">
+                    </div>
+                    <div>
+                        <label for="postal_code">Kode POS<span class="text-red-600">*</span></label>
+                        <input type="text" name="postal_code" id="postal_code">
+                    </div>
+                </div>
+                <div class="right w-[40%] flex flex-col gap-6">
+                    <h2 class="font-semibold text-[1.2rem]">Pesanan Anda</h2>
+                    <div class="flex flex-col gap-2">
+                        {{ range $k, $v := .cart.Menus }}
+                        <div class="flex items-center gap-2">
+                            <div class="bg-gray-300 w-10 h-10 rounded-sm"></div>
+                            <div class="flex flex-col">
+                                <span class="font-semibold capitalize">{{ $v.Name  }}</span>
+                                <spain class="text-[.9rem]">Qty {{ $v.Qty }}</span>
+                            </div>
+                        </div>
+                        {{ end }}
+                    </div>
+                    <div class="flex flex-col gap-2 [&>div]:flex [&>div]:justify-between [&>div]:items-center
+                        border border-gray-400 py-3 px-2 rounded-sm text-[.9rem] font-semibold">
+                        <div>
+                            <span>Subtotal</span>
+                            <span>Rp{{ .cart.Total }}</span>
+                        </div>
+                        <div>
+                            <span>Biaya Pengiriman</span>
+                            <span>Rp{{ .cart.DeliveryFee }}</span>
+                        </div>
+                        <div>
+                            <span>Total Pembayaran</span>
+                            <span>Rp{{ .totalPayment }}</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="py-2 px-4 bg-blue-600 text-white text-center font-semibold rounded-sm">Bayar Sekarang</button>
+                </div>
+            </form>
         </div>
     </body>
 </html>

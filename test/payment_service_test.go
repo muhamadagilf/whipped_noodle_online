@@ -1,6 +1,7 @@
 package test
 
 import (
+	"log"
 	"testing"
 
 	"github.com/muhamadagilf/whipped_noodle_online/service"
@@ -35,4 +36,5 @@ func TestPaymentService(t *testing.T) {
 	responseTest, err := service.MidtransCreateTransaction(testCart, testPaymentDetail)
 	assert.NoError(t, err, "no return error for midtrans result")
 	assert.NotEmpty(t, responseTest, "no return empty midtrans result")
+	log.Println(responseTest)
 }

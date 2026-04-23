@@ -72,10 +72,8 @@ func (h *Handler) Homepage(c echo.Context) error {
 	return c.Render(http.StatusOK, "home", Data{
 		"csrf_token": csrf,
 		"menu":       menu,
-		"cart":       cart.Menus,
-		"total":      cart.Total,
+		"cart":       cart,
 		"cred":       userCred,
-		"email":      userCred.Email,
 	})
 }
 
