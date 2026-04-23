@@ -12,26 +12,36 @@ import (
 	"github.com/muhamadagilf/whipped_noodle_online/util"
 )
 
-func (h *Handler) AddToCartSession(c echo.Context) error {
-	addToCartMenu := c.FormValue("menu-added")
-	qtyStr := c.FormValue("menu-qty")
-	s := strings.SplitN(addToCartMenu, ";", 3)
-	menuID := s[0]
-	menuName := s[1]
-	priceStr := s[2]
+type cartMenu struct {
+	MenuID   string `validate:"required"`
+	MenuName string `validate:"required"`
+	Price    string `validate:"required"`
+	Qty      string `validate:"required"`
+}
 
-	if menuName == "" || menuID == "" || priceStr == "" || qtyStr == "" {
-		return echo.NewHTTPError(http.StatusInternalServerError, "empty request body")
+func (h *Handler) AddToCart(c echo.Context) error {
+	addToCartMenu := c.FormValue("menu-added")
+	s := strings.SplitN(addToCartMenu, ";", 3)
+	menu := cartMenu{
+		MenuID:   s[0],
+		MenuName: s[1],
+		Price:    s[2],
+		Qty:      c.FormValue("menu-qty"),
 	}
-	if !slices.Contains(database.InMemoryMenu, menuName) {
+
+	if err := h.validate.Struct(menu); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	if !slices.Contains(database.InMemoryMenu, menu.MenuName) {
 		return echo.NewHTTPError(http.StatusBadRequest, util.NoMenuItem)
 	}
 
-	price, err := strconv.Atoi(priceStr)
+	price, err := strconv.Atoi(menu.Price)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	qty, err := strconv.Atoi(qtyStr)
+	qty, err := strconv.Atoi(menu.Qty)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
@@ -44,7 +54,7 @@ func (h *Handler) AddToCartSession(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
 	}
-	if err = cart.Add(menuName, qty, price, menuID); err != nil {
+	if err = cart.Add(menu.MenuName, qty, price, menu.MenuID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
@@ -53,14 +63,13 @@ func (h *Handler) AddToCartSession(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	c.Render(http.StatusOK, "cart-count", Data{"cart": *cart})
+	c.Render(http.StatusOK, "cart-count", Data{"cart": cart})
 	return c.Render(http.StatusOK, "cart-menu-section", Data{
-		"cart":  cart.Menus,
-		"total": cart.Total,
+		"cart": cart,
 	})
 }
 
-func (h *Handler) DeleteFromCartSession(c echo.Context) error {
+func (h *Handler) DeleteFromCart(c echo.Context) error {
 	menuID := c.Param("menuID")
 	session, ok := c.Get("session").(*sessions.Session)
 	if !ok {
@@ -79,9 +88,8 @@ func (h *Handler) DeleteFromCartSession(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	c.Render(http.StatusOK, "cart-count", Data{"cart": *cart})
+	c.Render(http.StatusOK, "cart-count", Data{"cart": cart})
 	return c.Render(http.StatusOK, "cart-menu-section", Data{
-		"cart":  cart.Menus,
-		"total": cart.Total,
+		"cart": cart,
 	})
 }
