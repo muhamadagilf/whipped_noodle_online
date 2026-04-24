@@ -11,9 +11,9 @@ import (
 
 func TestPaymentService(t *testing.T) {
 	testCart := util.Cart{
-		ID: "test-orderid-123",
+		ID: "test-orderid-456",
 		Menus: map[string]util.MenuOrder{
-			"test-itemid-123": util.MenuOrder{
+			"test-itemid-456": util.MenuOrder{
 				Name:  "Test Nasi Goreng",
 				Price: 5000,
 				Qty:   2,
