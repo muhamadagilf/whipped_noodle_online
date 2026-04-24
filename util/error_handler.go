@@ -18,11 +18,8 @@ func HTTPErrorHandling(err error, c echo.Context) {
 		}
 	}
 
-	switch HTTPErr.Code {
-	case http.StatusBadRequest:
-		c.Render(HTTPErr.Code, "error-message", map[string]any{"message": HTTPErr.Message.(string)})
-	case http.StatusNotFound, http.StatusInternalServerError:
-		c.String(HTTPErr.Code, HTTPErr.Message.(string))
+	if HTTPErr.Code >= 400 {
+		c.Render(HTTPErr.Code, "error-message", map[string]any{"message": HTTPErr.Message})
 	}
 
 }

@@ -103,10 +103,13 @@ func main() {
 	r.DELETE("/cart/delete/:menuID", h.DeleteFromCart)
 
 	r.GET("/checkout", h.Checkoutpage)
-	r.POST("/checkout/transaction/pay", h.Pay)
-	r.POST("/checkout/transaction/notification", h.TransactionNotification)
-	r.GET("/checkout/transaction/success", h.TransactionSuccess)
-	r.GET("/checkout/transaction/failed", h.TransactionFailed)
+	r.POST("/checkout/pay", h.Pay)
+
+	transactionHookURL := e.Group("/checkout/transaction")
+	transactionHookURL.Use(middleware.RequestLogger())
+	transactionHookURL.POST("/notification", h.TransactionNotification)
+	transactionHookURL.GET("/success", h.TransactionSuccess)
+	transactionHookURL.GET("/failed", h.TransactionFailed)
 
 	// BG_WORKER
 	go util.DBSessionCleanUp(s.Queries)

@@ -32,10 +32,11 @@ func (m *Middlewares) Session(next echo.HandlerFunc) echo.HandlerFunc {
 			session.Values["session_id"] = sessionID
 			session.Values["user_id"] = sql.NullString{Valid: false}
 			session.Values["cart"] = util.Cart{
-				ID:       cartID,
-				Menus:    make(map[string]util.MenuOrder),
-				Total:    0,
-				TotalQty: 0,
+				ID:          cartID,
+				Menus:       make(map[string]util.MenuOrder),
+				Total:       0,
+				TotalQty:    0,
+				DeliveryFee: 5000,
 			}
 
 			if err := query.Transaction(c.Request().Context(), m.Server.DB, func(qtx *database.Queries) error {
@@ -56,10 +57,11 @@ func (m *Middlewares) Session(next echo.HandlerFunc) echo.HandlerFunc {
 		cart, ok := session.Values["cart"].(util.Cart)
 		if !ok {
 			cart = util.Cart{
-				ID:       cartID,
-				Menus:    make(map[string]util.MenuOrder),
-				Total:    0,
-				TotalQty: 0,
+				ID:          cartID,
+				Menus:       make(map[string]util.MenuOrder),
+				Total:       0,
+				TotalQty:    0,
+				DeliveryFee: 5000,
 			}
 			session.Values["cart"] = cart
 		}

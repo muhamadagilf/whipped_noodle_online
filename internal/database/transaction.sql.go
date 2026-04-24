@@ -38,3 +38,8 @@ func (q *Queries) UpdateTransactionByID(ctx context.Context, args UpdateTransact
 	_, err := q.db.ExecContext(ctx, updateTransactionQuery, args.Status, args.MID, args.ID)
 	return err
 }
+
+func (q *Queries) DeleteTransactionByID(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, "DELETE FROM transactions WHERE id=?;", id)
+	return err
+}

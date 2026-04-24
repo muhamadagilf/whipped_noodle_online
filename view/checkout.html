@@ -13,7 +13,7 @@
                     <span>Back</span>
                 </a>
             </div>
-            <form hx-post="/checkout/transaction/pay" hx-target-error="#error-message" hx-indicator="#loader-indicator"
+            <form hx-post="/checkout/pay" hx-target-error="#error-message" hx-indicator="#loader-indicator"
              class="flex justify-between">
                 <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
                 <div class="left flex flex-col gap-5 w-[50%] [&>div]:flex [&>div]:flex-col [&>div]:gap-3

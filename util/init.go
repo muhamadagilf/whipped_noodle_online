@@ -1,5 +1,7 @@
 package util
 
+import "errors"
+
 var (
 	NoSessionError                  = "cannot find session in context"
 	NoUserIDError                   = "cannot find user_id in session"
@@ -11,4 +13,5 @@ var (
 	InvalidNotificationSignatureKey = "invalid transaction signature_key"
 	NoURLFound                      = "cannot found request URL"
 	InvalidRequestOperation         = "invalid request operation"
+	InvalidTotalPayment             = errors.New("invalid total payment. mismatch total value")
 )

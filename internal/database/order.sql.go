@@ -55,3 +55,8 @@ func (q *Queries) GetOrdersByOrderID(ctx context.Context, orderID string) ([]Ord
 	}
 	return s, nil
 }
+
+func (q *Queries) DeleteOrderByTransactionID(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, "DELETE FROM orders WHERE transaction_id=?;", id)
+	return err
+}

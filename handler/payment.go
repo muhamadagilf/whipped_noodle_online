@@ -4,12 +4,11 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
@@ -48,7 +47,16 @@ func (h *Handler) Pay(c echo.Context) error {
 
 	err := query.Transaction(c.Request().Context(), h.Server.DB, func(qtx *database.Queries) error {
 		var totalPayment int64
-		transactionID := fmt.Sprintf("TRA-%v-%v", uuid.New(), time.Now().Local().UnixMilli())
+		transactionID := fmt.Sprintf("TRA-%v", uuid.New())
+		if err := qtx.CreateTransaction(c.Request().Context(), database.CreateTransactionParam{
+			ID:           transactionID,
+			UserID:       cred.UserID.String,
+			Status:       "PENDING",
+			TotalPayment: cart.Total + cart.DeliveryFee,
+		}); err != nil {
+			return err
+		}
+
 		for id, item := range cart.Menus {
 			menu, err := qtx.GetMenuByID(c.Request().Context(), id)
 			if err != nil {
@@ -56,9 +64,6 @@ func (h *Handler) Pay(c echo.Context) error {
 			}
 
 			totalPayment += menu.Price * int64(item.Qty)
-			if totalPayment != cart.Total {
-				return errors.New("invalid total payment. mismatch total payment value")
-			}
 
 			if err := qtx.CreateOrder(c.Request().Context(), database.CreateOrderParam{
 				Qty:           item.Qty,
@@ -70,13 +75,15 @@ func (h *Handler) Pay(c echo.Context) error {
 			}
 		}
 
-		if err := qtx.CreateTransaction(c.Request().Context(), database.CreateTransactionParam{
-			ID:           transactionID,
-			UserID:       cred.UserID.String,
-			Status:       "PENDING",
-			TotalPayment: totalPayment + cart.DeliveryFee,
-		}); err != nil {
-			return err
+		log.Println("REACH HERE AFTER INSERT ORDERS")
+		if totalPayment != cart.Total {
+			if err := qtx.DeleteTransactionByID(c.Request().Context(), transactionID); err != nil {
+				return err
+			}
+			if err := qtx.DeleteOrderByTransactionID(c.Request().Context(), transactionID); err != nil {
+				return err
+			}
+			return util.InvalidTotalPayment
 		}
 
 		cart.ID = transactionID
@@ -86,6 +93,8 @@ func (h *Handler) Pay(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
+
+	log.Println("[CART_DEBUG]", cart.ID)
 
 	response, err := service.MidtransCreateTransaction(*cart, formPaymentData)
 	if err != nil {
