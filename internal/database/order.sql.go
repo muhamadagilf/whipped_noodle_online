@@ -60,3 +60,41 @@ func (q *Queries) DeleteOrderByTransactionID(ctx context.Context, id string) err
 	_, err := q.db.ExecContext(ctx, "DELETE FROM orders WHERE transaction_id=?;", id)
 	return err
 }
+
+const joinOrderQuery = `SELECT o.price, o.qty, m.name FROM orders AS o
+	JOIN menus AS m
+		ON o.menu_id = m.id
+	WHERE transaction_id = ?;
+`
+
+type JoinOrderMenu struct {
+	Price int64
+	Qty   int32
+	Name  string
+}
+
+func (q *Queries) GetJoinOrderByTransactionID(ctx context.Context, id string) ([]JoinOrderMenu, error) {
+	rows, err := q.db.QueryContext(ctx, joinOrderQuery, id)
+	if err != nil {
+		return nil, err
+	}
+	var s []JoinOrderMenu
+	for rows.Next() {
+		var i JoinOrderMenu
+		if err := rows.Scan(
+			&i.Price,
+			&i.Qty,
+			&i.Name,
+		); err != nil {
+			return nil, err
+		}
+		s = append(s, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}

@@ -26,6 +26,7 @@ var ProtectedURL = []string{
 	"/auth/logout/:uid",
 	"/profile",
 	"/checkout",
+	"/checkout/history",
 }
 
 type Server struct {

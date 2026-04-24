@@ -13,6 +13,7 @@
                     <i class="fa-solid fa-user" id="user-btn"></i>
                     <div id="user-logout-section" class="hidden absolute top-8 right-[22rem] py-2 px-3 flex flex-col gap-2 bg-white shadow-sm rounded-sm border border-gray-300">
                         <span class="underline text-[.9rem]">{{ .cred.Email  }}</span>
+                        <a href="/checkout/history" class="text-[.9rem] cursor-pointer">History</a>
                         <form hx-post="/auth/logout" hx-indicator="#loader-indicator" hx-target-error="#error-message">
                             <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
                             <button class="flex items-center gap-[.5rem] cursor-pointer py-[.5rem] px-[1rem] text-[.7rem]

@@ -104,6 +104,7 @@ func main() {
 
 	r.GET("/checkout", h.Checkoutpage)
 	r.POST("/checkout/pay", h.Pay)
+	r.GET("/checkout/history", h.CheckoutHistory)
 
 	transactionHookURL := e.Group("/checkout/transaction")
 	transactionHookURL.Use(middleware.RequestLogger())

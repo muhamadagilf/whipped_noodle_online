@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 
@@ -75,7 +74,6 @@ func (h *Handler) Pay(c echo.Context) error {
 			}
 		}
 
-		log.Println("REACH HERE AFTER INSERT ORDERS")
 		if totalPayment != cart.Total {
 			if err := qtx.DeleteTransactionByID(c.Request().Context(), transactionID); err != nil {
 				return err
@@ -93,8 +91,6 @@ func (h *Handler) Pay(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-
-	log.Println("[CART_DEBUG]", cart.ID)
 
 	response, err := service.MidtransCreateTransaction(*cart, formPaymentData)
 	if err != nil {

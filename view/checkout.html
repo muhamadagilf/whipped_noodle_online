@@ -76,3 +76,33 @@
     </body>
 </html>
 {{ end }}
+
+{{ block "checkout-history" . }}
+<html>
+  {{ template "head" . }}
+  <title>History</title>
+  <body hx-ext="response-targets" class="flex justify-center">
+    <div class="w-[70%] mt-[4rem] flex flex-col gap-5">
+      <div class="pb-5 border-b border-gray-400 flex justify-between items-center">
+        <h2 class="font-semibold text-[1.3rem] ">History</h2>
+        <a href="/home">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back</span>
+        </a>
+      </div>
+      <div class="flex flex-col gap-5">
+        {{ range .history }}
+          <div class="py-4 px-2 bg-white border border-gray-400 rounded-sm shadow-sm
+          flex flex-col gap-2">
+            <span>ID: {{ .Transaction.ID }}</span>
+            <span>Status: {{ .Transaction.Status }}</span>
+            <span>Total: Rp{{ .Transaction.TotalPayment }}</span>
+          </div>
+        {{ end }}
+      </div>
+    </div>
+  </body>
+</html>
+{{ end }}
+
+

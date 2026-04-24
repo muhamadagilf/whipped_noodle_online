@@ -49,10 +49,10 @@ type Transaction struct {
 	ID                    string
 	CreatedAt             string
 	UpdatedAt             string
-	UserID                string
-	MIdtransTransactionID sql.NullString
 	Status                string
 	TotalPayment          int64
+	UserID                string
+	MIdtransTransactionID sql.NullString
 }
 
 type UserPaymentDetail struct {

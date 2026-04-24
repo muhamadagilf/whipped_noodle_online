@@ -43,3 +43,64 @@ func (q *Queries) DeleteTransactionByID(ctx context.Context, id string) error {
 	_, err := q.db.ExecContext(ctx, "DELETE FROM transactions WHERE id=?;", id)
 	return err
 }
+
+func (q *Queries) GetTransactionByID(ctx context.Context, id string) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, "SELECT * FROM transactions WHERE id=?;", id)
+	if err != nil {
+		return nil, err
+	}
+	var s []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+			&i.MIdtransTransactionID,
+			&i.Status,
+			&i.TotalPayment,
+		); err != nil {
+			return nil, err
+		}
+		s = append(s, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
+func (q *Queries) GetTransactionByUserID(ctx context.Context, id string) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, "SELECT * FROM transactions WHERE user_id=?;", id)
+	if err != nil {
+		return nil, err
+	}
+	var s []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Status,
+			&i.TotalPayment,
+			&i.UserID,
+			&i.MIdtransTransactionID,
+		); err != nil {
+			return nil, err
+		}
+		s = append(s, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
