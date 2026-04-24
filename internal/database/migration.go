@@ -42,17 +42,20 @@ const createOrdersTable = `CREATE TABLE IF NOT EXISTS orders (
 	id TEXT PRIMARY KEY,
 	created_at TEXT NOT NULL,
 	updated_at TEXT NOT NULL,
-	menu_id TEXT REFERENCES menus(id) ON DELETE CASCADE
+	qty INTEGER NOT NULL,
+	price INTEGER NOT NULL,
+	menu_id TEXT NOT NULL REFERENCES menus(id) ON DELETE CASCADE,
+	transaction_id TEXT NOT NULL REFERENCES transactions(id) ON DELETE CASCADE
 );`
 
-const createCheckoutsTable = `CREATE TABLE IF NOT EXISTS checkouts (
+const createTransactionsTable = `CREATE TABLE IF NOT EXISTS transactions (
 	id TEXT PRIMARY KEY,
 	created_at TEXT NOT NULL,
 	updated_at TEXT NOT NULL,
-	order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-	user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	status TEXT NOT NULL,
-	total_payment INTEGER NOT NULL
+	total_payment INTEGER NOT NULL,
+	user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	midtrans_transaction_id TEXT
 );`
 
 func Migrate(DB *sql.DB) error {
@@ -76,7 +79,7 @@ func Migrate(DB *sql.DB) error {
 		return err
 	}
 
-	if _, err := DB.Exec(createCheckoutsTable); err != nil {
+	if _, err := DB.Exec(createTransactionsTable); err != nil {
 		return err
 	}
 

@@ -54,7 +54,7 @@ func (h *Handler) AddToCart(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
 	}
-	if err = cart.Add(menu.MenuName, qty, price, menu.MenuID); err != nil {
+	if err = cart.Add(menu.MenuName, qty, int64(price), menu.MenuID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 

@@ -39,8 +39,8 @@ func (q *Queries) GetAllMenu(ctx context.Context) ([]Menu, error) {
 	return menu, nil
 }
 
-func (q *Queries) GetMenuByName(ctx context.Context, name string) (Menu, error) {
-	row := q.db.QueryRowContext(ctx, "SELECT * FROM menus WHERE name=?", name)
+func (q *Queries) GetMenuByID(ctx context.Context, id string) (Menu, error) {
+	row := q.db.QueryRowContext(ctx, "SELECT * FROM menus WHERE id=?", id)
 	var i Menu
 	if err := row.Scan(
 		&i.ID,

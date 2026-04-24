@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 	"net/url"
 	"slices"
@@ -38,18 +37,11 @@ func (m *Middlewares) Authentication(next echo.HandlerFunc) echo.HandlerFunc {
 			userEmail = ""
 		}
 
-		cart, ok := session.Values["cart"].(util.Cart)
-		if !ok {
-			return echo.NewHTTPError(http.StatusInternalServerError, util.NoCartError)
-		}
-
-		c.Set("cart", &cart)
 		c.Set("userCred", UserCred{
 			UserID: userID,
 			Email:  userEmail,
 		})
 
-		log.Println(c.Path())
 		var requestURL string
 		if c.Path() == "/cart/delete/:menuID" {
 			requestURL = c.Path()
@@ -76,7 +68,6 @@ func (m *Middlewares) Authentication(next echo.HandlerFunc) echo.HandlerFunc {
 			if err = session.Save(c.Request(), c.Response()); err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err)
 			}
-			// redirectURL := "/login?redirect=" + url.QueryEscape(c.Request().URL.Path)
 			return c.Redirect(http.StatusFound, "/home")
 		}
 
@@ -100,10 +91,10 @@ func (m *Middlewares) VerifyRedirectURL(next echo.HandlerFunc) echo.HandlerFunc 
 			return next(c)
 		}
 		if strings.Contains(redirectURL, "https://") || strings.Contains(redirectURL, "http://") {
-			return echo.NewHTTPError(http.StatusNotFound, "cannot find URL; auth")
+			return echo.NewHTTPError(http.StatusNotFound, util.NoURLFound)
 		}
 		if !slices.Contains(server.ProtectedURL, redirectURL) {
-			return echo.NewHTTPError(http.StatusNotFound, "cannot find URL; auth")
+			return echo.NewHTTPError(http.StatusNotFound, util.NoURLFound)
 		}
 		if redirectURL != "" {
 			session, ok := c.Get("session").(*sessions.Session)

@@ -9,4 +9,6 @@ var (
 	HTTPErrorAssertErr              = "failed to assert type: echo.HTTPError"
 	NoMenuItem                      = "menu not found. please order in the menu"
 	InvalidNotificationSignatureKey = "invalid transaction signature_key"
+	NoURLFound                      = "cannot found request URL"
+	InvalidRequestOperation         = "invalid request operation"
 )

@@ -25,10 +25,10 @@ func (m *Middlewares) Session(next echo.HandlerFunc) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
+		cartID := fmt.Sprintf("orderid_%v_%v", uuid.New().String(), time.Now().Local().Unix())
 		if session.IsNew {
 			log.Println("CREATE NEW ONE")
 			sessionID := fmt.Sprintf("sessid_%v_%v", uuid.New().String(), time.Now().Local().UnixMilli())
-			cartID := fmt.Sprintf("orderid_%v_%v", uuid.New().String(), time.Now().Local().Unix())
 			session.Values["session_id"] = sessionID
 			session.Values["user_id"] = sql.NullString{Valid: false}
 			session.Values["cart"] = util.Cart{
@@ -53,11 +53,24 @@ func (m *Middlewares) Session(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println("[SESSION_CREATED]# ", sessionID)
 		}
 
-		log.Println("[SESSION_DEBUG]# ", session.Values["session_id"].(string))
+		cart, ok := session.Values["cart"].(util.Cart)
+		if !ok {
+			cart = util.Cart{
+				ID:       cartID,
+				Menus:    make(map[string]util.MenuOrder),
+				Total:    0,
+				TotalQty: 0,
+			}
+			session.Values["cart"] = cart
+		}
+
+		c.Set("cart", &cart)
 		c.Set("session", session)
 		if err := session.Save(c.Request(), c.Response()); err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
+
+		log.Println("[SESSION_DEBUG]# ", session.Values["session_id"].(string))
 		return next(c)
 	}
 }

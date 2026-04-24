@@ -31,23 +31,36 @@ type Menu struct {
 	UpdatedAt   time.Time
 	Name        string
 	Description string
-	Price       int
+	Price       int64
 	IsStocked   int32
 }
 
 type Order struct {
-	ID        string
-	CreatedAt string
-	UpdatedAt string
-	MenuID    string
+	ID            string
+	CreatedAt     string
+	UpdatedAt     string
+	Qty           int
+	Price         int64
+	MenuID        string
+	TransactionID string
 }
 
-type Checkout struct {
-	ID           string
-	CreatedAt    string
-	UpdatedAt    string
-	OrderID      string
-	UserID       string
-	Status       string
-	TotalPayment int32
+type Transaction struct {
+	ID                    string
+	CreatedAt             string
+	UpdatedAt             string
+	UserID                string
+	MIdtransTransactionID sql.NullString
+	Status                string
+	TotalPayment          int64
+}
+
+type UserPaymentDetail struct {
+	Name        string `validate:"required"`
+	Email       string `validate:"required"`
+	Phone       string `validate:"required"`
+	Address     string `validate:"required"`
+	City        string `validate:"required"`
+	PostalCode  string `validate:"required"`
+	CountryCode string `validate:"required"`
 }

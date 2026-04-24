@@ -1,9 +1,9 @@
 package test
 
 import (
-	"log"
 	"testing"
 
+	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
 	"github.com/muhamadagilf/whipped_noodle_online/service"
 	"github.com/muhamadagilf/whipped_noodle_online/util"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +24,7 @@ func TestPaymentService(t *testing.T) {
 		DeliveryFee: 5000,
 	}
 
-	testPaymentDetail := util.UserPaymentDetail{
+	testPaymentDetail := database.UserPaymentDetail{
 		Name:        "Testing Nama",
 		Email:       "testingemail@example.com",
 		Phone:       "08451123123",
@@ -39,5 +39,4 @@ func TestPaymentService(t *testing.T) {
 	assert.NotEmpty(t, responseTest, "no return empty midtrans result")
 	assert.NotEmpty(t, responseTest.Token, "no return empty token")
 	assert.NotEmpty(t, responseTest.RedirectURL, "no return redirect url")
-	log.Println(responseTest)
 }

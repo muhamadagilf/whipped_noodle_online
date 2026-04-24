@@ -4,17 +4,25 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
+	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
+	"github.com/muhamadagilf/whipped_noodle_online/middlewares"
 	"github.com/muhamadagilf/whipped_noodle_online/service"
 	"github.com/muhamadagilf/whipped_noodle_online/util"
 )
 
 func (h *Handler) Pay(c echo.Context) error {
-	formPaymentData := util.UserPaymentDetail{
+	query := h.Server.Queries
+	formPaymentData := database.UserPaymentDetail{
 		Name:        c.FormValue("fullname"),
 		Email:       c.FormValue("email"),
 		Phone:       c.FormValue("phone"),
@@ -33,8 +41,63 @@ func (h *Handler) Pay(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCartError)
 	}
 
+	cred, ok := c.Get("userCred").(middlewares.UserCred)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoUserIDError)
+	}
+
+	err := query.Transaction(c.Request().Context(), h.Server.DB, func(qtx *database.Queries) error {
+		var totalPayment int64
+		transactionID := fmt.Sprintf("TRA-%v-%v", uuid.New(), time.Now().Local().UnixMilli())
+		for id, item := range cart.Menus {
+			menu, err := qtx.GetMenuByID(c.Request().Context(), id)
+			if err != nil {
+				return err
+			}
+
+			totalPayment += menu.Price * int64(item.Qty)
+			if totalPayment != cart.Total {
+				return errors.New("invalid total payment. mismatch total payment value")
+			}
+
+			if err := qtx.CreateOrder(c.Request().Context(), database.CreateOrderParam{
+				Qty:           item.Qty,
+				Price:         menu.Price,
+				MenuID:        menu.ID,
+				TransactionID: transactionID,
+			}); err != nil {
+				return err
+			}
+		}
+
+		if err := qtx.CreateTransaction(c.Request().Context(), database.CreateTransactionParam{
+			ID:           transactionID,
+			UserID:       cred.UserID.String,
+			Status:       "PENDING",
+			TotalPayment: totalPayment + cart.DeliveryFee,
+		}); err != nil {
+			return err
+		}
+
+		cart.ID = transactionID
+
+		return nil
+	})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
 	response, err := service.MidtransCreateTransaction(*cart, formPaymentData)
 	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	session, ok := c.Get("session").(*sessions.Session)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, util.NoSessionError)
+	}
+	delete(session.Values, "cart")
+	if err := session.Save(c.Request(), c.Response()); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
@@ -86,7 +149,33 @@ func (h *Handler) TransactionNotification(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, util.InvalidNotificationSignatureKey)
 	}
 
-	// PROCESS
+	query := h.Server.Queries
+	switch payload.TransactionStatus {
+	case "settlement", "capture":
+		if err := query.UpdateTransactionByID(c.Request().Context(), database.UpdateTransactionParam{
+			Status: "PAID",
+			MID:    payload.TransactionID,
+			ID:     payload.OrderID,
+		}); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+	case "pending":
+		if err := query.UpdateTransactionByID(c.Request().Context(), database.UpdateTransactionParam{
+			Status: "PENDING",
+			MID:    payload.TransactionID,
+			ID:     payload.OrderID,
+		}); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+	case "expire", "cancel", "deny":
+		if err := query.UpdateTransactionByID(c.Request().Context(), database.UpdateTransactionParam{
+			Status: "FAILED",
+			MID:    payload.TransactionID,
+			ID:     payload.OrderID,
+		}); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+	}
 
 	return c.NoContent(http.StatusOK)
 }

@@ -23,7 +23,7 @@ var PublicURL = []string{
 }
 
 var ProtectedURL = []string{
-	"/auth/logout",
+	"/auth/logout/:uid",
 	"/profile",
 	"/checkout",
 }

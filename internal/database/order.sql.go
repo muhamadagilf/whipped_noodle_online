@@ -3,16 +3,28 @@ package database
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
-const createOrderQuery = `INSERT INTO orders (id, created_at, updated_at, menu_id) VALUES (?,?,?,?);`
+const createOrderQuery = `INSERT INTO orders (id, created_at, updated_at, qty, price, menu_id, transaction_id) VALUES (?,?,?,?,?,?,?);`
 
-func (q *Queries) CreateOrder(ctx context.Context, orderID string, menuID string) error {
+type CreateOrderParam struct {
+	Qty           int
+	Price         int64
+	MenuID        string
+	TransactionID string
+}
+
+func (q *Queries) CreateOrder(ctx context.Context, args CreateOrderParam) error {
 	_, err := q.db.ExecContext(ctx, createOrderQuery,
-		orderID,
+		uuid.New(),
 		time.Now().Local().String(),
 		time.Now().Local().String(),
-		menuID,
+		args.Qty,
+		args.Price,
+		args.MenuID,
+		args.TransactionID,
 	)
 	return err
 }

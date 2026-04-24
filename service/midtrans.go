@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/midtrans/midtrans-go"
 	"github.com/midtrans/midtrans-go/snap"
+	"github.com/muhamadagilf/whipped_noodle_online/internal/database"
 	"github.com/muhamadagilf/whipped_noodle_online/util"
 )
 
@@ -16,13 +17,13 @@ type transactionResponse struct {
 	RedirectURL string `json:"redirect_url"`
 }
 
-func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymentDetail) (*snap.Response, error) {
+func MidtransCreateTransaction(cart util.Cart, userPaymentDetail database.UserPaymentDetail) (*snap.Response, error) {
 	var itemDetails []midtrans.ItemDetails
 	for id, item := range cart.Menus {
 		itemDetails = append(itemDetails, midtrans.ItemDetails{
 			ID:    id,
 			Name:  item.Name,
-			Price: int64(item.Price),
+			Price: item.Price,
 			Qty:   int32(item.Qty),
 		})
 	}
@@ -30,7 +31,7 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 	itemDetails = append(itemDetails, midtrans.ItemDetails{
 		ID:    fmt.Sprintf("DELIVERY-FEE-%v", uuid.New()),
 		Name:  "DELIVERY-FEE",
-		Price: int64(cart.DeliveryFee),
+		Price: cart.DeliveryFee,
 		Qty:   1,
 	})
 
@@ -43,7 +44,7 @@ func MidtransCreateTransaction(cart util.Cart, userPaymentDetail util.UserPaymen
 	req := &snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  cart.ID,
-			GrossAmt: int64(cart.Total + cart.DeliveryFee),
+			GrossAmt: cart.Total + cart.DeliveryFee,
 		},
 		Items: &itemDetails,
 		CustomerDetail: &midtrans.CustomerDetails{

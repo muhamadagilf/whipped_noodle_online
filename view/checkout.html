@@ -4,6 +4,7 @@
     {{ template "head" . }}
     <title>Checkout</title>
     <body hx-ext="response-targets" class="flex flex-col items-center gap-[1.5rem]">
+        {{ template "loader" . }}
         <div class="flex flex-col gap-6 justify-center w-[70%] mt-[4rem]">
             <div class="header flex items-center justify-between">
                 <h2 class="font-semibold text-[1.3rem]">Checkout</h2>
@@ -12,7 +13,8 @@
                     <span>Back</span>
                 </a>
             </div>
-            <form action="" class="flex justify-between">
+            <form hx-post="/checkout/transaction/pay" hx-target-error="#error-message" hx-indicator="#loader-indicator"
+             class="flex justify-between">
                 <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
                 <div class="left flex flex-col gap-5 w-[50%] [&>div]:flex [&>div]:flex-col [&>div]:gap-3
                     [&_input]:outline-none [&_input]:border [&_input]:border-gray-400 [&_input]:shadow-md
@@ -69,6 +71,7 @@
                     <button type="submit" class="py-2 px-4 bg-blue-600 text-white text-center font-semibold rounded-sm">Bayar Sekarang</button>
                 </div>
             </form>
+            <div id="error-message"></div>
         </div>
     </body>
 </html>
