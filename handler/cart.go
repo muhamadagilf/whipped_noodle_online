@@ -63,10 +63,9 @@ func (h *Handler) AddToCart(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	c.Render(http.StatusOK, "cart-count", Data{"cart": cart})
-	return c.Render(http.StatusOK, "cart-menu-section", Data{
-		"cart": cart,
-	})
+	c.Render(http.StatusOK, "add-alert", Data{})
+	c.Render(http.StatusOK, "cart-count", Data{"cart": cart })
+	return c.Render(http.StatusOK, "cart-menu-section", Data{ "cart": cart })
 }
 
 func (h *Handler) DeleteFromCart(c echo.Context) error {

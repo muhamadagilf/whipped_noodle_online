@@ -47,3 +47,33 @@
     left: unset;
   }
 }
+
+#add-signal {
+      animation: slideup-gone 1s forwards;
+}
+
+@keyframes slideup-gone {
+      0% {
+            opacity: 1;
+            display: flex;
+            bottom: 0;
+      }
+
+      30% {
+            opacity: 1;
+            display: flex;
+            bottom: 6rem;
+      }
+
+      80% {
+            opacity: 1;
+            display: flex;
+            bottom: 6rem;
+      }
+
+      100% {
+           opacity: 0;
+           display: none;
+      }
+}
+

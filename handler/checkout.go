@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -56,7 +55,7 @@ func (h *Handler) CheckoutHistory(c echo.Context) error {
 	for _, item := range checkouts {
 		orders, err := query.GetJoinOrderByTransactionID(c.Request().Context(), item.ID)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, errors.Join(errors.New("Error JoinOrderMenu"), err))
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 		history = append(history, checkoutHitory{
 			Transaction: item,
