@@ -34,7 +34,7 @@
                         {{ template "cart-count" . }}
                     </div>
                     <div id="cart-section" class="hidden absolute py-[4rem] px-[1.5rem] top-0 right-0 w-[20%] h-[100vh] 
-                    border-l border-gray-300 bg-white shadow-md flex flex-col gap-[1rem]">
+                    border-l border-gray-300 bg-white shadow-md flex flex-col gap-[1rem] transition">
                         <div class="flex justify-between items-center font-semibold pb-2 border-b">
                             <span>Keranjang</span>
                             <i class="fa-solid fa-close cursor-pointer" id="cart-close-btn"></i>
@@ -44,7 +44,8 @@
                 </div>
             </div>
             <div id="content" class="flex flex-col gap-[1.5rem]">
-                <div class="corousel-section bg-gray-300 h-[40vh] rounded-sm"></div>
+                <div class="corousel-section h-[40vh] rounded-sm bg-white bg-[url(../static/img/9e9b2902-073f-4c15-b7b6-fbabc3dfde19.jpg)] bg-cover bg-center
+                  border border-gray-300 shadow-sm"></div>
                 <div class="order-menu-section flex flex-col gap-[2rem]">
                     <h2 class="uppercase font-bold text-[1.2rem] border-b border-black">Menu</h2>
                     <form hx-post="/cart/add" hx-swap="none" hx-target-error="#error-message" class="flex flex-col gap-[1rem]">
@@ -58,7 +59,7 @@
                                 class="pl-2 pr-4 py-2 text-sm font-medium text-heading capitalize cursor-pointer
                                 peer-checked:bg-blue-600 peer-checked:text-white border border-gray-600 rounded-sm
                                 flex gap-[.8rem] items-center">
-                                    <div class="bg-gray-300 w-15 h-15 rounded-sm"></div>
+                                    <div class="menu-bg bg-gray-300 w-15 h-15 rounded-sm bg-[url(../static/img/{{ .ID }}.jpg)] bg-cover"></div>
                                     <div class="flex flex-col gap-[.3rem]">
                                         <span>{{ .Name }}</span>
                                         <span class="text-[.9rem]">Rp{{ .Price }}</span>
@@ -81,7 +82,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" class="flex items-center justify-center gap-2 px-[.8rem] py-3 cursor-pointer
+                        <button id="add-to-cart-btn" type="submit" class="flex items-center justify-center gap-2 px-[.8rem] py-3 cursor-pointer
                         rounded-sm hover:bg-blue-800 bg-blue-600 text-white w-[fit-content] mt-[1rem]">
                             <i class="fa-solid fa-shopping-cart text-[.9rem]"></i>
                             <span class="font-semibold m-0 text-[1rem]">Masuk Keranjang</span>
@@ -97,6 +98,7 @@
         document.addEventListener('DOMContentLoaded', function(event) {
             const menuQty = document.getElementById('menu-qty');
             const cartSection = document.getElementById('cart-section');
+            const addToCartBtn = document.getElementById('add-to-cart-btn');
             document.getElementById('dec-btn').addEventListener('click', function() {
                 let x = Number(menuQty.value)
                 menuQty.value = x - 1
@@ -121,7 +123,11 @@
             document.getElementById('user-btn').addEventListener('mousedown', (e) => { e.preventDefault(); })
             document.getElementById('user-btn').addEventListener('click', () => {
                 document.getElementById('user-logout-section').classList.toggle("hidden")
-            })
+            });
+
+            addToCartBtn.addEventListener('click', function() {
+                  cartSection.classList.remove('hidden')
+            });
         });
     </script>
 </html>
