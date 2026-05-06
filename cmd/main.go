@@ -75,20 +75,25 @@ func main() {
 	mdl := middlewares.NewMiddlewares(s)
 	newValidate := validator.New()
 	h := handler.NewHandler(s, newValidate)
+	cop := http.NewCrossOriginProtection()
+
+	// CSRF_AUTH_KEY := os.Getenv("CSRF_AUTH_KEY")
+	// if CSRF_AUTH_KEY == "" {
+	// 	log.Fatal("cannot find csrf secret key from env")
+	// }
+	// CSRF := csrf.Protect(
+	// 	[]byte(CSRF_AUTH_KEY),
+	// 	csrf.Path("/"),
+	// 	csrf.HttpOnly(true),
+	// 	csrf.Secure(false),
+	// 	csrf.SameSite(csrf.SameSiteStrictMode),
+	// 	csrf.TrustedOrigins([]string{"localhost:8000", "http://localhost:8000", "http://127.0.0.0:8000"}),
+	// )
 
 	r := e.Group("")
 	r.Use(middleware.RequestLogger())
+	r.Use(mdl.CrossProtectionHTTP(cop))
 	r.Use(mdl.Session)
-	r.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-		CookiePath:     "/",
-		TokenLength:    32,
-		TokenLookup:    "form:_csrf,header:HX-CSRF-TOKEN",
-		ContextKey:     "csrf",
-		CookieName:     "_csrf",
-		CookieMaxAge:   86400,
-		CookieHTTPOnly: true,
-		CookieSameSite: http.SameSiteLaxMode,
-	}))
 	r.Use(mdl.Authentication)
 	r.Use(mdl.VerifyRedirectURL)
 

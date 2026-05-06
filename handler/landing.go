@@ -31,10 +31,6 @@ type UserData struct {
 func (h *Handler) Homepage(c echo.Context) error {
 	rdb := h.Server.RDB
 	query := h.Server.Queries
-	csrf, ok := c.Get("csrf").(string)
-	if !ok {
-		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCSRFError)
-	}
 
 	var menu []database.Menu
 	cached, err := rdb.Get(c.Request().Context(), "menu:all").Result()
@@ -70,21 +66,14 @@ func (h *Handler) Homepage(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "home", Data{
-		"csrf_token": csrf,
-		"menu":       menu,
-		"cart":       cart,
-		"cred":       userCred,
+		"menu": menu,
+		"cart": cart,
+		"cred": userCred,
 	})
 }
 
 func (h *Handler) Loginpage(c echo.Context) error {
-	csrf, ok := c.Get("csrf").(string)
-	if !ok {
-		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCSRFError)
-	}
-	return c.Render(http.StatusOK, "login", Data{
-		"csrf_token": csrf,
-	})
+	return c.Render(http.StatusOK, "login", Data{})
 }
 
 func (h *Handler) Login(c echo.Context) error {

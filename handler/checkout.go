@@ -16,10 +16,6 @@ type checkoutHitory struct {
 
 func (h *Handler) Checkoutpage(c echo.Context) error {
 	query := h.Server.Queries
-	csrf, ok := c.Get("csrf").(string)
-	if !ok {
-		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCSRFError)
-	}
 	cart, ok := c.Get("cart").(*util.Cart)
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, util.NoCartError)
@@ -33,7 +29,6 @@ func (h *Handler) Checkoutpage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 	return c.Render(http.StatusOK, "checkout", Data{
-		"csrf_token":   csrf,
 		"cart":         cart,
 		"user":         user,
 		"totalPayment": cart.Total + cart.DeliveryFee,

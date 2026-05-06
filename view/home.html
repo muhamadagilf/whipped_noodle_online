@@ -3,31 +3,31 @@
 <html>
     {{  template "head" . }}
     <title>Homepage</title>
-    <body hx-ext="response-targets" class="flex flex-col items-center gap-[1.5rem]">
+    <body hx-ext="response-targets" class="flex flex-col items-center gap-[1.5rem] bg-gray-50 
+            bg-[url('../static/img/body_bg.jpg')] bg-cover bg-repeat">
         {{  template "loader" . }}
         <div class="flex flex-col gap-[2rem] w-[70%] mt-[4rem]">
             <div id="header" class="flex justify-between items-center">
-                <h1 class="font-bold text-[1.2rem]">SEBLAK99</h1>
+                <h1 class="font-bold text-[1.3rem] text-emerald-600 bg-white px-5 py-1 border border-gray-600 shadow-md rounded-sm">SEBLAK99</h1>
                 <div class="flex items-center gap-3">
                     {{ if .cred.UserID.Valid }}
                     <span class="font-semibold text-[.9rem] underline">{{  .cred.Email }}</span>
                     <i class="fa-solid fa-user text-gray-600 cursor-pointer" id="user-btn"></i>
                     <div id="user-logout-section" class="hidden w-[15%] absolute top-8 right-[22rem] py-2 px-3 
                       flex flex-col gap-2 bg-white shadow-sm rounded-sm border border-gray-300">
-                        <a href="/checkout/history" class="flex items-center gap-5 text-gray-600 cursor-pointer py-2 px-[1rem] hover:bg-blue-600 hover:text-white rounded-sm">
+                        <a href="/checkout/history" class="flex items-center gap-5 text-gray-600 cursor-pointer py-2 px-[1rem] hover:bg-emerald-600 hover:text-white rounded-sm">
                             <i class="fa-solid fa-history"></i>
                             <span>History</span>
                         </a>
                         <form hx-post="/auth/logout" hx-indicator="#loader-indicator" hx-target-error="#error-message">
-                            <input type="hidden" name="_csrf" value="{{ .csrf_token }}">
-                            <button class="w-[100%] flex items-center gap-5 cursor-pointer py-2 px-[1rem] text-gray-600 hover:bg-blue-600 hover:text-white rounded-sm" type="submit">
+                            <button class="w-[100%] flex items-center gap-5 cursor-pointer py-2 px-[1rem] text-gray-600 hover:bg-emerald-600 hover:text-white rounded-sm" type="submit">
                                 <i class="fa-solid fa-door-open"></i>
                                 <span>Logout</span>
                             </button>
                         </form>
                     </div>
                     {{ else }}
-                    <a class="text-[.9rem] cursor-pointer py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-800 hover:text-white transition" href="/login">Login</a>
+                    <a class="text-[.9rem] cursor-pointer py-2 px-4 bg-emerald-600 text-white rounded hover:bg-emerald-800 hover:text-white transition" href="/login">Login</a>
                     {{ end }}
                     <div>
                         <i class="fa-solid fa-shopping-cart text-[1.2rem] pr-2 text-gray-600 cursor-pointer" id="cart-btn"></i>
@@ -44,20 +44,19 @@
                 </div>
             </div>
             <div id="content" class="flex flex-col gap-[1.5rem]">
-                <div class="corousel-section h-[40vh] rounded-sm bg-white bg-[url(../static/img/9e9b2902-073f-4c15-b7b6-fbabc3dfde19.jpg)] bg-cover bg-center
-                  border border-gray-300 shadow-sm"></div>
+                <div class="banner w-full h-[40vh] bg-[url(../static/img/banner_bg.jpg)] bg-cover
+                             rounded-sm border border-gray-600 shadow-md"></div>
                 <div class="order-menu-section flex flex-col gap-[2rem]">
-                    <h2 class="uppercase font-bold text-[1.2rem] border-b border-black">Menu</h2>
+                    <h2 class="text-emerald-600 uppercase font-bold text-[1.2rem] border border-gray-600 shadow-md bg-white px-5 py-.8 rounded-sm">Menu</h2>
                     <form hx-post="/cart/add" hx-swap="none" hx-target-error="#error-message" class="flex flex-col gap-[1rem]">
-                        <input type="hidden" name="_csrf" value="csrf_token">
                         <div class="flex items-center gap-[.8rem]">
                             {{ range .menu }}
-                            <div>
+                            <div class="rounded-sm bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg hover:shadow-gray-600">
                                 <input id="{{ .ID }}" type="radio" name="menu-added" class="hidden peer"
                                 value="{{ .ID }};{{ .Name }};{{ .Price }}" required>
                                 <label for="{{ .ID }}"
                                 class="pl-2 pr-4 py-2 text-sm font-medium text-heading capitalize cursor-pointer
-                                peer-checked:bg-blue-600 peer-checked:text-white border border-gray-600 rounded-sm
+                                peer-checked:bg-emerald-600 peer-checked:text-white border border-gray-600 rounded-sm
                                 flex gap-[.8rem] items-center">
                                     <div class="menu-bg bg-gray-300 w-15 h-15 rounded-sm bg-[url(../static/img/{{ .ID }}.jpg)] bg-cover"></div>
                                     <div class="flex flex-col gap-[.3rem]">
@@ -70,7 +69,7 @@
                         </div>
                         <div>
                             <p class="font-semibold">Choose Quantity:</p>
-                            <div class="border border-gray-600 w-[fit-content] px-[.5rem] py-[.3rem] mt-[.5rem] rounded-sm">
+                            <div class="bg-white border border-gray-600 w-[fit-content] px-[.5rem] py-[.3rem] mt-[.5rem] rounded-sm">
                                 <button type="button" id="dec-btn" class="border-r border-gray-600 pr-2 cursor-pointer">
                                     <i class="fa-solid fa-minus"></i>
                                 </button>
@@ -83,7 +82,7 @@
                             </div>
                         </div>
                         <button id="add-to-cart-btn" type="submit" class="flex items-center justify-center gap-2 px-[.8rem] py-3 cursor-pointer
-                        rounded-sm hover:bg-blue-800 bg-blue-600 text-white w-[fit-content] mt-[1rem]">
+                        rounded-sm hover:bg-emerald-800 bg-emerald-600 text-white w-[fit-content] mt-[1rem]">
                             <i class="fa-solid fa-shopping-cart text-[.9rem]"></i>
                             <span class="font-semibold m-0 text-[1rem]">Masuk Keranjang</span>
                         </button>
@@ -91,9 +90,12 @@
                 </div>
             </div>
         </div>
+
       <div id="error-message"></div>
       <div id="add-signal"></div>
+
     </body>
+
     <script>
         document.addEventListener('DOMContentLoaded', function(event) {
             const menuQty = document.getElementById('menu-qty');
@@ -130,5 +132,5 @@
             });
         });
     </script>
-</html>
+</html >
 {{ end }}
